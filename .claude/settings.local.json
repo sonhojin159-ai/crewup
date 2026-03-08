@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where claude)",
+      "Bash(npm install -g @anthropic-ai/claude-code)",
+      "Bash(claude --version)",
+      "Bash(shopt -s dotglob)",
+      "Bash(mv temp-app/* .)",
+      "Bash(mv temp-app/.* .)",
+      "Bash(rmdir temp-app)",
+      "Bash(npm run dev)",
+      "Bash(ngrok version)",
+      "Bash(npm list -g ngrok)",
+      "Bash(npm install -g ngrok)",
+      "Bash(ngrok http 3000)"
+    ]
+  }
+}
