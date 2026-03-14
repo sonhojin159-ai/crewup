@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Crew } from "@/types/crew";
+import { CrewSummary } from "@/types/crew";
 import RoleBadge from "./RoleBadge";
 
-export default function CrewCard({ crew }: { crew: Crew }) {
+export default function CrewCard({ crew }: { crew: CrewSummary }) {
   const progress = (crew.members / crew.maxMembers) * 100;
   const isFull = crew.members >= crew.maxMembers;
   const isAlmostFull = !isFull && progress >= 80;

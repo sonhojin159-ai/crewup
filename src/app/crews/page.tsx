@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CrewCard from "@/components/CrewCard";
 import { CATEGORIES } from "@/lib/data";
-import { Crew, RoleType } from "@/types/crew";
+import { CrewSummary, RoleType } from "@/types/crew";
 
 const ROLE_FILTERS: { value: RoleType | "all"; label: string }[] = [
   { value: "all", label: "전체 역할" },
@@ -20,7 +20,7 @@ export default function CrewsPage() {
   const [selectedRole, setSelectedRole] = useState<RoleType | "all">("all");
   const [selectedTrack, setSelectedTrack] = useState<"all" | "mission" | "revenue_share">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [crews, setCrews] = useState<Crew[]>([]);
+  const [crews, setCrews] = useState<CrewSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function CrewsPage() {
           tags: string[];
           crew_members: { count: number }[];
         }
-        const mappedData: Crew[] = data.map((crew: CrewRow) => ({
+        const mappedData: CrewSummary[] = data.map((crew: CrewRow) => ({
           id: crew.id,
           title: crew.title,
           category: crew.category,

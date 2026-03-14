@@ -18,6 +18,11 @@ export interface Crew {
   missionRewardRate: number;
 }
 
+export type CrewSummary = Pick<
+  Crew,
+  'id' | 'title' | 'category' | 'members' | 'maxMembers' | 'description' | 'tags' | 'roleType' | 'track'
+>;
+
 export interface Mission {
   id: string;
   title: string;

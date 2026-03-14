@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import CrewCard from "@/components/CrewCard";
 import { CATEGORIES } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
-import { Crew } from "@/types/crew";
+import { CrewSummary, RoleType } from "@/types/crew";
 
 export const dynamic = "force-dynamic";
 
@@ -17,15 +17,15 @@ export default async function Home() {
     .order("created_at", { ascending: false })
     .limit(6);
 
-  const crews: Crew[] = (data || []).map((row: Record<string, unknown>) => ({
+  const crews: CrewSummary[] = (data || []).map((row: Record<string, unknown>) => ({
     id: row.id as string,
     title: row.title as string,
     category: row.category as string,
-    roleType: (row.role_type as string) as Crew["roleType"],
+    roleType: (row.role_type as string) as RoleType,
     description: row.description as string,
     maxMembers: row.max_members as number,
     tags: (row.tags as string[]) || [],
-    track: row.track as Crew["track"],
+    track: row.track as CrewSummary["track"],
     members: ((row.crew_members as { count: number }[])?.[0]?.count) || 0,
   }));
   return (
