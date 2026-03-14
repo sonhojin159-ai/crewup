@@ -1,0 +1,2 @@
+﻿src/app/api/payments/confirm/route.ts(22,28): error TS2351: This expression is not constructable.
+  Type 'BootpayRestClient' has no construct signatures.

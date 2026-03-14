@@ -1,32 +1,615 @@
 @import "tailwindcss";
 
+/* ============================================================
+   크루업 Design System — Tailwind v4 CSS-first config
+   Palette: Coral Red / Peach / Khaki / Mint / Cream
+   ============================================================ */
+
+/* ---------- Core CSS custom properties ---------- */
 :root {
+  /* Surface */
   --background: #ffffff;
-  --foreground: #171717;
-  --primary: #4f46e5;
-  --primary-light: #818cf8;
-  --accent: #f59e0b;
+  --surface: #EEF5DB;         /* cream — cards, section tints */
+  --surface-muted: #D6D1B1;   /* khaki — borders, dividers, tags */
+
+  /* Foreground */
+  --foreground: #1A1A1A;      /* near-black ink */
+  --foreground-muted: #6B6B6B; /* secondary text, placeholders */
+
+  /* Brand palette */
+  --primary: #FE5F55;         /* coral red — CTAs, links, active states */
+  --primary-hover: #e54e44;   /* darkened coral for hover */
+  --primary-light: #FE5F55;   /* alias used in ring utilities (opacity handled inline) */
+  --secondary: #F0B67F;       /* peach — secondary buttons, highlights, icons */
+  --secondary-hover: #e8a06a; /* darkened peach */
+  --secondary-text: #a0622a;  /* brown — text on peach backgrounds */
+  --neutral: #D6D1B1;         /* khaki — borders, subtle fills */
+  --success: #C7EFCF;         /* mint — success states, completed missions */
+  --success-text: #2d7a45;    /* dark green for text on mint bg */
+
+  /* Semantic aliases */
+  --border: #D6D1B1;
+  --input-bg: #ffffff;
+  --card-bg: #EEF5DB;
+
+  /* Typography */
+  --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Monaco, Consolas, monospace;
 }
 
+/* ---------- Tailwind v4 @theme block ---------- */
+/* This maps CSS vars to Tailwind utility names */
 @theme inline {
+  /* Colors */
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
   --color-primary: var(--primary);
-  --color-primary-light: var(--primary-light);
-  --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-neutral: var(--neutral);
+  --color-success: var(--success);
+  --color-success-text: var(--success-text);
+  --color-secondary-text: var(--secondary-text);
+  --color-border: var(--border);
+
+  /* Fonts */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ---------- Base reset & Korean typography ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;    /* 15px body */
+  line-height: 1.75;       /* Korean text needs ≥1.7 */
+  /* Critical for Korean text — prevents mid-syllable line breaks */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Heading line-heights — tighter than body for display text */
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--foreground);
+  word-break: keep-all;
+}
+
+/* Paragraph spacing for Korean readability */
+p {
+  line-height: 1.75;
+}
+
+/* Remove default tap highlight on mobile — use :active states instead */
+a, button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth transitions on interactive elements */
+a, button {
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+}
+
+/* ---------- Scrollbar styling ---------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neutral);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b8b393;
+}
+
+/* ---------- Focus visible (keyboard nav a11y) ---------- */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Selection color ---------- */
+::selection {
+  background-color: #FE5F55;
+  color: #ffffff;
+}
+
+/* ============================================================
+   Component layer — reusable class compositions
+   Use these in JSX via className. They replace the old
+   scattered one-off Tailwind strings so components stay DRY.
+   ============================================================ */
+
+@layer components {
+
+  /* ------ Buttons ------ */
+
+  /* Primary: Coral Red — main CTAs */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 1rem;           /* rounded-2xl = 16px */
+    background-color: var(--primary);
+    padding: 0.75rem 1.5rem;       /* py-3 px-6 */
+    font-size: 0.875rem;           /* text-sm */
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #ffffff;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 4px 12px rgba(254, 95, 85, 0.3);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.97);
+  }
+
+  .btn-primary:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Primary large — hero CTAs, form submit */
+  .btn-primary-lg {
+    padding: 1rem 2rem;            /* py-4 px-8 */
+    font-size: 1rem;               /* text-base */
+    border-radius: 1rem;
+  }
+
+  /* Secondary: Peach — supporting actions */
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 1rem;
+    border: 2px solid var(--secondary);
+    background-color: rgba(240, 182, 127, 0.15);
+    padding: 0.6875rem 1.5rem;     /* 11px to compensate 2px border */
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--foreground);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn-secondary:hover {
+    background-color: rgba(240, 182, 127, 0.3);
+    border-color: var(--secondary-hover);
+  }
+
+  .btn-secondary:active {
+    transform: scale(0.97);
+  }
+
+  /* Outline / Ghost — tertiary actions */
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 1rem;
+    border: 1px solid var(--neutral);
+    background-color: transparent;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--foreground);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn-outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background-color: rgba(254, 95, 85, 0.05);
+  }
+
+  .btn-outline:active {
+    transform: scale(0.97);
+  }
+
+  /* Destructive ghost — for 반려/거절, prevents accidental clicks */
+  .btn-destructive {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--neutral);
+    background-color: transparent;
+    padding: 0.625rem 1rem;        /* py-2.5 px-4 */
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--foreground-muted);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .btn-destructive:hover {
+    border-color: #fca5a5;
+    color: #dc2626;
+    background-color: #fef2f2;
+  }
+
+  /* ------ Form elements ------ */
+
+  .form-input {
+    width: 100%;
+    border-radius: 0.75rem;        /* rounded-xl = 12px */
+    border: 1px solid var(--neutral);
+    background-color: var(--input-bg);
+    padding: 0.75rem 1rem;         /* py-3 px-4 */
+    font-size: 0.9375rem;          /* 15px — matches body */
+    color: var(--foreground);
+    line-height: 1.5;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    /* Prevent iOS zoom on focus (font-size must be ≥16px equivalent) */
+    font-family: inherit;
+  }
+
+  .form-input::placeholder {
+    color: rgba(107, 107, 107, 0.6);
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 3px rgba(240, 182, 127, 0.2);
+  }
+
+  .form-input:disabled {
+    background-color: var(--surface);
+    color: var(--foreground-muted);
+    cursor: not-allowed;
+  }
+
+  .form-input.error {
+    border-color: #f87171;
+  }
+
+  .form-input.error:focus {
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
+  }
+
+  .form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--foreground);
+    margin-bottom: 0.375rem;       /* mb-1.5 */
+  }
+
+  .form-label-required::after {
+    content: " *";
+    color: var(--primary);
+  }
+
+  .form-hint {
+    font-size: 0.75rem;
+    color: var(--foreground-muted);
+    margin-top: 0.25rem;
+  }
+
+  /* ------ Cards ------ */
+
+  /* Standard card — crew cards, list items */
+  .card {
+    background-color: var(--card-bg);
+    border-radius: 1rem;           /* rounded-2xl */
+    border: 1px solid var(--neutral);
+    padding: 1.5rem;               /* p-6 */
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .card-interactive:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(240, 182, 127, 0.2), 0 2px 8px rgba(254, 95, 85, 0.08);
+    border-color: var(--secondary);
+  }
+
+  /* Flat card (no hover lift — for wallet, static info) */
+  .card-flat {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid var(--neutral);
+    padding: 1rem;                 /* p-4 */
+  }
+
+  /* Wallet hero card */
+  .card-hero {
+    background: linear-gradient(135deg, #FE5F55 0%, #F0B67F 60%, #D6D1B1 100%);
+    border-radius: 1rem;
+    padding: 2rem;                 /* p-8 */
+    color: #ffffff;
+    box-shadow: 0 8px 32px rgba(254, 95, 85, 0.25), 0 2px 8px rgba(240, 182, 127, 0.2);
+  }
+
+  /* ------ Badges ------ */
+
+  /* Category badge — active (filled coral) */
+  .badge-category-active {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 9999px;
+    background-color: var(--primary);
+    padding: 0.375rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #ffffff;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Category badge — inactive */
+  .badge-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 9999px;
+    border: 1px solid var(--neutral);
+    background-color: transparent;
+    padding: 0.375rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--foreground);
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .badge-category:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  /* Role badges — remapped to warm palette */
+  .badge-role-investor {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid rgba(240, 182, 127, 0.6);
+    background-color: rgba(240, 182, 127, 0.2);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--secondary-text);
+  }
+
+  .badge-role-operator {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid var(--success);
+    background-color: rgba(199, 239, 207, 0.35);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--success-text);
+  }
+
+  .badge-role-both {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid rgba(254, 95, 85, 0.35);
+    background-color: rgba(254, 95, 85, 0.1);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #c03329;
+  }
+
+  /* Status badges */
+  .badge-success {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid var(--success);
+    background-color: rgba(199, 239, 207, 0.4);
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--success-text);
+  }
+
+  .badge-pending {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid rgba(240, 182, 127, 0.6);
+    background-color: rgba(240, 182, 127, 0.2);
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--secondary-text);
+  }
+
+  .badge-locked {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid var(--neutral);
+    background-color: rgba(214, 209, 177, 0.3);
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--foreground-muted);
+  }
+
+  /* Tag chip */
+  .tag-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 0.375rem;       /* rounded-md */
+    background-color: rgba(214, 209, 177, 0.4);
+    padding: 0.125rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--foreground-muted);
+  }
+
+  /* ------ Progress bars ------ */
+
+  .progress-track {
+    height: 0.375rem;              /* h-1.5 */
+    width: 100%;
+    border-radius: 9999px;
+    background-color: rgba(214, 209, 177, 0.5);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    background-color: var(--primary);
+    transition: width 0.5s ease;
+  }
+
+  .progress-fill-almost {
+    /* For crews ≥80% full — peach-to-coral gradient signals urgency */
+    height: 100%;
+    border-radius: 9999px;
+    background: linear-gradient(to right, #F0B67F, #FE5F55);
+    transition: width 0.5s ease;
+  }
+
+  .progress-fill-full {
+    /* Greyed out when crew is 마감 */
+    height: 100%;
+    border-radius: 9999px;
+    background-color: var(--neutral);
+  }
+
+  .progress-fill-success {
+    /* For wallet mission rate ≥80% — positive green */
+    height: 100%;
+    border-radius: 9999px;
+    background-color: var(--success-text);
+    transition: width 0.5s ease;
+  }
+
+  /* ------ Header nav ------ */
+
+  .nav-link {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--foreground);
+    transition: color 0.15s ease;
+    padding: 0.25rem 0;
+  }
+
+  .nav-link:hover {
+    color: var(--primary);
+  }
+
+  .nav-link-active {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  /* ------ Tabs ------ */
+
+  .tab-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--foreground-muted);
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover {
+    color: var(--foreground);
+  }
+
+  .tab-btn-active {
+    color: var(--primary);
+    font-weight: 600;
+    border-bottom-color: var(--primary);
+  }
+
+  /* ------ Section divider ------ */
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--neutral);
+    margin: 0;
+  }
+
+  /* ------ Empty state ------ */
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 1rem;
+    text-align: center;
+    color: var(--foreground-muted);
+  }
+
+  .empty-state-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 9999px;
+    background-color: var(--surface);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
 }
