@@ -65,6 +65,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </SubmitButton>
         </form>
 
+        <p className="mt-8 text-center text-sm text-foreground-muted">
+          아직 계정이 없으신가요?{" "}
+          <Link href="/signup" className="font-semibold text-primary hover:underline">
+            회원가입
+          </Link>
+        </p>
       </div>
     </div>
   );
