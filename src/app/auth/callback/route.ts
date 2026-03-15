@@ -13,19 +13,14 @@ export async function GET(request: Request) {
         const supabase = await createClient();
         const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-        if (!error) {
-            const forwardedHost = request.headers.get('x-forwarded-host');
-            const isLocalEnv = process.env.NODE_ENV === 'development';
-
-            if (isLocalEnv) {
-                return NextResponse.redirect(`${origin}${safeNext}`);
-            } else if (forwardedHost) {
-                return NextResponse.redirect(`https://${forwardedHost}${safeNext}`);
-            }
-            return NextResponse.redirect(`${origin}${safeNext}`);
+        if (error) {
+            return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`);
         }
+    } else {
+        const errorMsg = searchParams.get('error_description') || searchParams.get('error') || '인증에 실패했습니다.';
+        return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(errorMsg)}`);
     }
 
-    // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/login?error=true`);
+    // Default error fallback
+    return NextResponse.redirect(`${origin}/login?error=unknown_error`);
 }
