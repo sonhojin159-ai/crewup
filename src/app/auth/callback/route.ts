@@ -14,11 +14,12 @@ export async function GET(request: Request) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (error) {
-            return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`);
+            console.error('OAuth code exchange error:', error.message);
+            return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('로그인에 실패했습니다. 다시 시도해주세요.')}`);
         }
     } else {
-        const errorMsg = searchParams.get('error_description') || searchParams.get('error') || '인증에 실패했습니다.';
-        return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(errorMsg)}`);
+        console.error('OAuth callback error:', searchParams.get('error_description') || searchParams.get('error'));
+        return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('소셜 로그인에 실패했습니다. 다시 시도해주세요.')}`);
     }
 
     // Success! Redirect to the destination

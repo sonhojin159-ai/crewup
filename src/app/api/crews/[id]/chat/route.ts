@@ -108,6 +108,10 @@ export async function POST(
             return NextResponse.json({ error: '메시지를 입력해주세요.' }, { status: 400 });
         }
 
+        if (content.length > 2000) {
+            return NextResponse.json({ error: '메시지는 2000자 이하여야 합니다.' }, { status: 400 });
+        }
+
         const { data: crew } = await supabase
             .from('crews')
             .select('created_by')

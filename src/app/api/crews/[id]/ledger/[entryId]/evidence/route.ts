@@ -1,6 +1,47 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
+// GET /api/crews/[id]/ledger/[entryId]/evidence — 증빙 signed URL 목록 반환
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string; entryId: string }> }
+) {
+  const { id, entryId } = await params;
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { data: entry } = await supabase
+      .from('ledger_entries')
+      .select('evidence_urls')
+      .eq('id', entryId)
+      .eq('crew_id', id)
+      .single();
+
+    if (!entry) return NextResponse.json({ error: '장부를 찾을 수 없습니다.' }, { status: 404 });
+
+    const filePaths: string[] = entry.evidence_urls || [];
+    if (filePaths.length === 0) return NextResponse.json({ signedUrls: [] });
+
+    const { data: signedData, error: signedError } = await supabase.storage
+      .from('ledger-evidence')
+      .createSignedUrls(filePaths, 3600);
+
+    if (signedError) throw signedError;
+
+    const signedUrls = (signedData || []).map(item => item.signedUrl);
+    return NextResponse.json({ signedUrls });
+
+  } catch (error: unknown) {
+    console.error('Evidence signed URL error:', error);
+    return NextResponse.json({ error: '증빙 URL 조회 중 오류가 발생했습니다.' }, { status: 500 });
+  }
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string; entryId: string }> }

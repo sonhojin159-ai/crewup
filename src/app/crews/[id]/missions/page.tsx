@@ -33,13 +33,17 @@ export default function MissionsPage() {
   const fetchCrewMissions = useCallback(async () => {
     setIsLoading(true);
     const supabase = createClient();
+
+    // 현재 로그인 사용자 조회
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { data, error } = await supabase
       .from("crews")
       .select(`
         *,
         missions (
           *,
-          mission_verifications (id)
+          mission_verifications (id, user_id, distribution_status)
         )
       `)
       .eq("id", id)
@@ -64,7 +68,13 @@ export default function MissionsPage() {
         missionRewardRate: data.mission_reward_rate || 0,
         missions: (data.missions || []).map((m: any) => ({
           ...m,
-          completed: m.mission_verifications && m.mission_verifications.length > 0,
+          // 현재 사용자의 인증 완료 여부로 판단 (개인별 기준)
+          completed: user
+            ? (m.mission_verifications || []).some(
+                (v: { user_id: string; distribution_status: string }) =>
+                  v.user_id === user.id && v.distribution_status === 'completed'
+              )
+            : false,
         })),
       });
     }

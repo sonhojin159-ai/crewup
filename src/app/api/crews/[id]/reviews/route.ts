@@ -47,6 +47,17 @@ export async function POST(
       return NextResponse.json({ error: '평점을 입력해주세요.' }, { status: 400 });
     }
 
+    const crewRatingNum = Number(crew_rating);
+    const leaderRatingNum = Number(leader_rating);
+    if (!Number.isInteger(crewRatingNum) || crewRatingNum < 1 || crewRatingNum > 5 ||
+        !Number.isInteger(leaderRatingNum) || leaderRatingNum < 1 || leaderRatingNum > 5) {
+      return NextResponse.json({ error: '평점은 1~5 사이의 정수여야 합니다.' }, { status: 400 });
+    }
+
+    if (comment && comment.length > 500) {
+      return NextResponse.json({ error: '리뷰 내용은 500자 이하여야 합니다.' }, { status: 400 });
+    }
+
     // 1. 멤버십 확인 (active 상태인지)
     const { data: membership, error: memberError } = await supabase
       .from('crew_members')

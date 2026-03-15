@@ -51,68 +51,23 @@ export async function POST(
             return NextResponse.json({ error: '이미 탈퇴한 크루입니다.' }, { status: 400 });
         }
 
-        // 3. 상태 업데이트 및 포인트 처리 (에스크로 몰수)
-        // payment_status가 paid인 경우에만 에스크로 몰수 처리
-        if (member.payment_status === 'paid') {
-            const { data: updatedHolds, error: escrowError } = await supabase
-                .from('escrow_holds')
-                .update({ status: 'forfeited', updated_at: new Date().toISOString() })
-                .eq('crew_id', id)
-                .eq('member_user_id', user.id)
-                .in('status', ['holding', 'partially_released'])
-                .select('amount'); // m4 Fix: UPDATE 반환값을 직접 사용하여 중복 합산 방지
+        // [C3 수정] process_crew_leave RPC로 에스크로 몰수 + 분배 + 멤버 상태 변경을
+        // 단일 트랜잭션으로 처리 (비원자성 문제 해결)
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('process_crew_leave', {
+            p_crew_id: id,
+            p_user_id: user.id,
+        });
 
-            if (escrowError) throw escrowError;
-
-            // m4 Fix: 이번 탈퇴에서 실제로 몰수된 금액만 사용
-            const forfeitedAmount = (updatedHolds || []).reduce(
-                (sum: number, h: { amount: number }) => sum + (h.amount || 0), 0
-            );
-
-            if (forfeitedAmount > 0) {
-                const { data: upData, error: upError } = await supabase
-                    .from('user_points')
-                    .select('escrow_balance')
-                    .eq('user_id', user.id)
-                    .single();
-
-                if (!upError && upData) {
-                    const newEscrow = Math.max(0, (upData.escrow_balance || 0) - forfeitedAmount);
-                    await supabase
-                        .from('user_points')
-                        .update({ escrow_balance: newEscrow })
-                        .eq('user_id', user.id);
-                }
-            }
-
-            // Fetch actual balance for the transaction log (BUG-17)
-            const { data: userPoints } = await supabase
-                .from('user_points')
-                .select('balance')
-                .eq('user_id', user.id)
-                .single();
-
-            const { error: txError } = await supabase
-                .from('point_transactions')
-                .insert({
-                    user_id: user.id,
-                    type: 'forfeiture',
-                    amount: 0, 
-                    balance_after: userPoints?.balance || 0,
-                    crew_id: id,
-                    note: '크루 자발적 탈퇴 - 에스크로 몰수'
-                });
-
-            if (txError) throw txError;
+        if (rpcError) {
+            console.error('process_crew_leave RPC error:', rpcError);
+            throw rpcError;
         }
 
-        // 4. 멤버 상태 업데이트
-        const { error: updateError } = await supabase
-            .from('crew_members')
-            .update({ status: 'left' })
-            .eq('id', member.id);
+        const result = rpcResult as { success: boolean; error?: string; forfeited_amount?: number };
 
-        if (updateError) throw updateError;
+        if (!result.success) {
+            return NextResponse.json({ error: result.error || '탈퇴 처리에 실패했습니다.' }, { status: 400 });
+        }
 
         return NextResponse.json({ success: true }, { status: 200 });
 

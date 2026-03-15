@@ -23,7 +23,7 @@ export async function GET() {
       created_at,
       profiles (
         email,
-        full_name
+        nickname
       ),
       gifticon_products (
         name,

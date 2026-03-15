@@ -129,7 +129,23 @@ export default function DashboardPage() {
     if (!confirm(`[${missionTitle}] 미션을 인증 처리하시겠습니까?\n해당 미션에 배정된 리워드가 크루원들에게 배분됩니다.`)) return;
     setIsProcessing(true);
     try {
-      const res = await fetch(`/api/crews/${id}/missions/${missionId}/verify`, { method: 'POST' });
+      // pending 제출건 조회
+      const feedRes = await fetch(`/api/crews/${id}/missions/feed`);
+      if (!feedRes.ok) throw new Error('인증 피드 조회에 실패했습니다.');
+      const feed: Array<{ id: string; mission_id: string; status: string }> = await feedRes.json();
+      const pendingSubmission = feed.find(s => s.mission_id === missionId && s.status === 'pending');
+
+      if (!pendingSubmission) {
+        alert('대기 중인 인증 신청이 없습니다.');
+        setIsProcessing(false);
+        return;
+      }
+
+      const res = await fetch(`/api/crews/${id}/missions/${missionId}/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submissionId: pendingSubmission.id }),
+      });
       if (!res.ok) {
          const data = await res.json();
          throw new Error(data.error);

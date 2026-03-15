@@ -54,25 +54,25 @@ export async function POST(
       return NextResponse.json({ error: '승인된 미션 인증이 없습니다. 크루장 승인 후 신청 가능합니다.' }, { status: 400 });
     }
 
-    // 4. 이미 리워드를 받았는지 확인 (mission_verifications 테이블에 해당 유저/미션 기록 확인)
-    const { data: existingReward } = await supabase
+    // 4. 인증 기록 조회 및 배분 상태 확인
+    const { data: verification } = await supabase
       .from('mission_verifications')
-      .select('id')
+      .select('id, distribution_status')
       .eq('mission_id', missionId)
       .eq('user_id', user.id)
-      .eq('distribution_status', 'completed')
       .maybeSingle();
 
-    if (existingReward) {
+    if (!verification) {
+      return NextResponse.json({ error: '미션 인증 내역이 없습니다. 크루장 승인 후 신청 가능합니다.' }, { status: 400 });
+    }
+
+    if (verification.distribution_status === 'completed') {
       return NextResponse.json({ error: '이미 이 미션의 리워드를 수령했습니다.' }, { status: 400 });
     }
 
-    // 5. RPC 호출로 개인 리워드 지급
+    // 5. RPC 호출로 개인 리워드 지급 (올바른 시그니처: p_verification_id)
     const { error: rpcError } = await supabase.rpc('distribute_individual_mission_reward', {
-      p_mission_id: missionId,
-      p_crew_id: crewId,
-      p_submission_id: approvedSubmission.id,
-      p_user_id: user.id,
+      p_verification_id: verification.id,
     });
 
     if (rpcError) {

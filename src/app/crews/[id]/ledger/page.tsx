@@ -30,6 +30,7 @@ export default function LedgerPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [totalMembers, setTotalMembers] = useState(0);
   const [settlements, setSettlements] = useState<Record<string, SettlementTransfer[]>>({});
+  const [evidenceSignedUrls, setEvidenceSignedUrls] = useState<Record<string, string[]>>({});
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,6 +91,21 @@ export default function LedgerPage() {
       const lockedEntries = data.filter((e: any) => e.is_locked);
       if (lockedEntries.length > 0) {
         fetchSettlements(lockedEntries);
+      }
+      // 증빙 파일 경로 → signed URL 변환
+      const entriesWithEvidence = data.filter((e: any) => e.evidence_urls?.length > 0);
+      if (entriesWithEvidence.length > 0) {
+        const signedUrlMap: Record<string, string[]> = {};
+        await Promise.all(
+          entriesWithEvidence.map(async (e: any) => {
+            const evRes = await fetch(`/api/crews/${id}/ledger/${e.id}/evidence`);
+            if (evRes.ok) {
+              const evData = await evRes.json();
+              signedUrlMap[e.id] = evData.signedUrls || [];
+            }
+          })
+        );
+        setEvidenceSignedUrls(signedUrlMap);
       }
     }
 
@@ -481,7 +497,7 @@ export default function LedgerPage() {
 
                     {entry.evidence_urls && entry.evidence_urls.length > 0 && (
                       <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-                        {entry.evidence_urls.map((url: string, idx: number) => {
+                        {(evidenceSignedUrls[entry.id] || []).map((url: string, idx: number) => {
                           const isVideoFile = /\.(mp4|webm|mov)(\?|$)/i.test(url);
                           return isVideoFile ? (
                             <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="shrink-0 group relative h-20 w-20 overflow-hidden rounded-lg border border-neutral bg-black">
