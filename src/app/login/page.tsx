@@ -65,26 +65,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </SubmitButton>
         </form>
 
-        {/* Social login */}
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-neutral" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-background px-4 text-foreground-muted">또는</span>
-            </div>
-          </div>
-
-          <OAuthButtons />
-        </div>
-
-        <p className="mt-8 text-center text-sm text-foreground-muted">
-          아직 계정이 없으신가요?{" "}
-          <Link href="/signup" className="font-semibold text-primary hover:underline">
-            회원가입
-          </Link>
-        </p>
       </div>
     </div>
   );

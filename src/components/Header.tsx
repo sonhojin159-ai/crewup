@@ -86,12 +86,6 @@ export default function Header() {
               >
                 로그인
               </Link>
-              <Link
-                href="/signup"
-                className="hidden sm:block btn-primary !py-2 !px-4 !rounded-xl !text-sm"
-              >
-                회원가입
-              </Link>
             </>
           )}
 
@@ -163,13 +157,6 @@ export default function Header() {
                   className="rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-neutral/20"
                 >
                   로그인
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={() => setMenuOpen(false)}
-                  className="btn-primary mt-1 w-full !rounded-xl text-center"
-                >
-                  회원가입
                 </Link>
               </>
             )}
