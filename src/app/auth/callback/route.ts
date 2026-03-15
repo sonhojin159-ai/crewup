@@ -21,6 +21,6 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(errorMsg)}`);
     }
 
-    // Default error fallback
-    return NextResponse.redirect(`${origin}/login?error=unknown_error`);
+    // Success! Redirect to the destination
+    return NextResponse.redirect(`${origin}${safeNext}`);
 }
