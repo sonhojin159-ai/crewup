@@ -78,14 +78,32 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-10 border-t border-neutral pt-6">
-          <p className="text-center text-xs leading-relaxed text-foreground-muted">
-            &copy; 2026 CrewUp. All rights reserved.
-          </p>
-          {/* 통신판매중개자 면책 문구 — legal risk mitigation */}
-          <p className="mt-2 text-center text-xs leading-relaxed text-foreground-muted/70">
-            크루업은 통신판매중개자로서 크루 운영에 대한 직접적인 책임을 지지 않습니다.
-            크루 활동에 관한 분쟁은 크루원 간 해결을 원칙으로 합니다.
-          </p>
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <div className="space-y-1 text-xs leading-relaxed text-foreground-muted">
+              <p>
+                <span className="font-semibold text-foreground">상호명:</span> 텍스트팩토리 | 
+                <span className="ml-1 font-semibold text-foreground">대표자:</span> 김화란 |
+                <span className="ml-1 font-semibold text-foreground">사업자등록번호:</span> 221-18-98955
+              </p>
+              <p>
+                <span className="font-semibold text-foreground">주소:</span> 경기도 파주시 심학산로 234, 810동 203호(동패동, 초롱꽃마을8단지)
+              </p>
+              <p>
+                <span className="font-semibold text-foreground">고객센터:</span> 070-8027-1918 |
+                <span className="ml-1 font-semibold text-foreground">이메일:</span> support@textfactory.io
+              </p>
+            </div>
+
+            <p className="text-xs leading-relaxed text-foreground-muted/60">
+              &copy; 2026 CrewUp. All rights reserved.
+            </p>
+
+            {/* 통신판매중개자 면책 문구 — legal risk mitigation */}
+            <p className="max-w-2xl text-[10px] leading-relaxed text-foreground-muted/40">
+              크루업은 통신판매중개자로서 크루 운영에 대한 직접적인 책임을 지지 않습니다.
+              크루 활동에 관한 분쟁은 크루원 간 해결을 원칙으로 하며, 개별 크루의 운영 방침은 해당 크루장에게 책임이 있습니다.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
