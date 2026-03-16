@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -29,7 +29,7 @@ export default function DashboardPage() {
   
   
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     const supabase = createClient();
     
@@ -101,11 +101,11 @@ export default function DashboardPage() {
     if (cListData) setChats(cListData);
 
     setIsLoading(false);
-  };
+  }, [id]);
 
   useEffect(() => {
     if (id) fetchDashboardData();
-  }, [id]);
+  }, [id, fetchDashboardData]);
 
   const handleApproveMember = async (memberId: string) => {
     if (!confirm("이 유저의 가입을 승인하시겠습니까?\n승인 시 유저의 포인트가 차감되며 에스크로에 보관됩니다.")) return;

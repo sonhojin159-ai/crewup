@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -81,12 +82,14 @@ export default function RewardOrdersPage() {
                 >
                   <div className="flex items-start gap-4">
                     {/* 이미지 */}
-                    <div className="h-16 w-16 shrink-0 rounded-xl bg-surface flex items-center justify-center overflow-hidden">
+                    <div className="h-16 w-16 shrink-0 rounded-xl bg-surface flex items-center justify-center overflow-hidden relative">
                       {order.rewards_store?.image_url ? (
-                        <img
+                        <Image
                           src={order.rewards_store.image_url}
                           alt={order.rewards_store.title ?? ""}
-                          className="h-full w-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="64px"
                         />
                       ) : (
                         <span className="text-2xl text-foreground-muted/30">🎁</span>

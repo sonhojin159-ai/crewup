@@ -18,7 +18,6 @@ export default function AdminBlacklistPage() {
   const [loading, setLoading] = useState(true);
 
   function fetchData() {
-    setLoading(true);
     fetch('/api/admin/blacklist')
       .then((res) => res.json())
       .then((data: BlacklistEntry[]) => setEntries(data))
@@ -34,7 +33,7 @@ export default function AdminBlacklistPage() {
       method: 'DELETE',
     });
     if (res.ok) {
-      setEntries((prev) => prev.filter((e) => e.id !== entryId));
+      fetchData();
     }
   }
 

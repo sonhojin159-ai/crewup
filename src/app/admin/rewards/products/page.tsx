@@ -465,7 +465,7 @@ export default function AdminRewardsProductsPage() {
 
               {/* 원본 URL */}
               <div>
-                <label className="form-label">원본 URL</label>
+                <label className="form-label">Partner Mall(신화캐슬) URL</label>
                 <input
                   type="url"
                   value={form.original_url}
@@ -475,7 +475,7 @@ export default function AdminRewardsProductsPage() {
                       original_url: e.target.value,
                     }))
                   }
-                  placeholder="PAPA's Pick 상품 링크 (선택)"
+                  placeholder="위탁 결제를 진행할 원본 상품 링크"
                   className="form-input"
                 />
               </div>

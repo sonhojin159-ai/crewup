@@ -16,7 +16,7 @@ export async function GET() {
     const { data, error } = await admin
       .from('blacklist')
       .select(
-        `*, profile:profiles!user_id(id, nickname, email), report:reports!report_id(id, title, report_type)`
+        `*, profile:profiles!user_id(id, nickname), report:reports!report_id(id, title, report_type)`
       )
       .order('created_at', { ascending: false });
 
@@ -79,7 +79,6 @@ export async function POST(request: Request) {
         reason: reason.trim(),
         report_id: reportId || null,
         banned_until: bannedUntil || null,
-        created_by: user.id,
       })
       .select()
       .single();

@@ -17,7 +17,9 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const [profileResult, membershipsResult, reportsResult, blacklistResult] = await Promise.all([
+    const [authResult, profileResult, membershipsResult, reportsResult, blacklistResult] = await Promise.all([
+      admin.auth.admin.getUserById(id),
+
       admin
         .from('profiles')
         .select('*')
@@ -48,7 +50,10 @@ export async function GET(
     }
 
     return NextResponse.json({
-      profile: profileResult.data,
+      profile: {
+        ...profileResult.data,
+        email: authResult.data.user?.email || '',
+      },
       memberships: membershipsResult.data || [],
       reports: reportsResult.data || [],
       blacklist: blacklistResult.data || null,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -120,7 +121,7 @@ export default function RewardsPage() {
               PAPA&apos;s Pick 리워드 스토어
             </h1>
             <p className="mt-1 text-sm text-foreground-muted">
-              적립한 포인트로 실물 상품을 주문하세요
+              적립한 포인트로 실물 상품을 주문하세요 (최대 6주 이내 배송 보장)
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -158,12 +159,14 @@ export default function RewardsPage() {
                     className="overflow-hidden rounded-2xl border border-neutral bg-white transition-shadow hover:shadow-md"
                   >
                     {/* 이미지 */}
-                    <div className="aspect-square bg-surface flex items-center justify-center">
+                    <div className="aspect-square bg-surface flex items-center justify-center relative">
                       {item.image_url ? (
-                        <img
+                        <Image
                           src={item.image_url}
                           alt={item.title}
-                          className="h-full w-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                       ) : (
                         <span className="text-5xl text-foreground-muted/30">🎁</span>
@@ -344,6 +347,8 @@ export default function RewardsPage() {
                       <br />
                       주문 처리를 위해 (주)신화캐슬에 이름, 연락처, 주소를 제공합니다.
                       제공된 정보는 배송 완료 후 30일 이내 파기됩니다.
+                      <br />
+                      <span className="text-primary font-medium mt-1 inline-block">* 본 서비스는 위탁 구매 대행으로, 최대 6주 이내 배송을 보장합니다.</span>
                     </span>
                   </label>
                 </div>

@@ -59,7 +59,8 @@
       "Bash(cd \"C:\\\\Users\\\\sonho\\\\OneDrive\\\\바탕 화면\\\\Project_IDEA\" && npx tsc --noEmit 2>&1 | head -10)",
       "Bash(npx tsc:*)",
       "Bash(taskkill //F //IM \"node.exe\" 2>/dev/null; sleep 2; echo \"done\")",
-      "Bash(taskkill //F //IM node.exe 2>/dev/null; echo \"done\")"
+      "Bash(taskkill //F //IM node.exe 2>/dev/null; echo \"done\")",
+      "Bash(grep -i \"blacklist\\\\|CREATE TABLE blacklist\" docs/schema*.sql)"
     ]
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface Message {
@@ -23,7 +23,7 @@ export default function PreJoinChat({ crewId, isLeader, applicantId }: { crewId:
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     if (!isOpen || !crewId) return;
     setIsLoading(true);
     try {
@@ -41,7 +41,7 @@ export default function PreJoinChat({ crewId, isLeader, applicantId }: { crewId:
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isOpen, crewId, isLeader, applicantId, currentUserId]);
 
   useEffect(() => {
      createClient().auth.getUser().then(({ data }) => {
@@ -138,6 +138,9 @@ export default function PreJoinChat({ crewId, isLeader, applicantId }: { crewId:
             targetApplicantId: isLeader ? applicantId : undefined 
         }),
       });
+      if (!res.ok) {
+        throw new Error("전송 실패");
+      }
       // realtime이 처리하므로 fetchMessages()를 수동으로 부를 필요 없음
     } catch (e) {
       alert("메시지 전송에 실패했습니다.");

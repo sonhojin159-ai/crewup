@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -58,7 +59,7 @@ export default function LedgerPage() {
     setSettlements(newSettlements);
   }, [id]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -110,11 +111,11 @@ export default function LedgerPage() {
     }
 
     setIsLoading(false);
-  };
+  }, [id, router, fetchSettlements]);
 
   useEffect(() => {
     if (id) fetchData();
-  }, [id]);
+  }, [id, fetchData]);
 
   const handleCreateEntry = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -508,7 +509,7 @@ export default function LedgerPage() {
                             </a>
                           ) : (
                             <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="shrink-0 group relative h-20 w-20 overflow-hidden rounded-lg border border-neutral">
-                              <img src={url} alt="증빙" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                              <Image src={url} alt="증빙" fill className="object-cover transition-transform group-hover:scale-105" sizes="80px" />
                             </a>
                           );
                         })}

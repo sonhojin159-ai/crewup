@@ -66,7 +66,6 @@ export default function AdminReportsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
     const params = new URLSearchParams();
     if (currentStatus) params.set('status', currentStatus);
     params.set('page', String(currentPage));
@@ -81,6 +80,7 @@ export default function AdminReportsPage() {
   }, [currentStatus, currentPage]);
 
   function navigate(status: string, page: number) {
+    setLoading(true);
     const params = new URLSearchParams();
     if (status) params.set('status', status);
     if (page > 1) params.set('page', String(page));

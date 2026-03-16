@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface Review {
@@ -30,6 +30,21 @@ export default function ReviewSection({ crewId }: { crewId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const fetchReviews = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/crews/${crewId}/reviews`);
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [crewId]);
+
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
@@ -48,22 +63,7 @@ export default function ReviewSection({ crewId }: { crewId: string }) {
     });
 
     fetchReviews();
-  }, [crewId]);
-
-  const fetchReviews = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/crews/${crewId}/reviews`);
-      if (res.ok) {
-        const data = await res.json();
-        setReviews(data);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [crewId, fetchReviews]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

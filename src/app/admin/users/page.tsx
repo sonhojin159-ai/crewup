@@ -35,7 +35,6 @@ export default function AdminUsersPage() {
   const [searchInput, setSearchInput] = useState(currentSearch);
 
   useEffect(() => {
-    setLoading(true);
     const params = new URLSearchParams();
     if (currentSearch) params.set('search', currentSearch);
     params.set('page', String(currentPage));
@@ -51,12 +50,14 @@ export default function AdminUsersPage() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
+    setLoading(true);
     const params = new URLSearchParams();
     if (searchInput.trim()) params.set('search', searchInput.trim());
     router.push(`/admin/users?${params}`);
   }
 
   function navigate(page: number) {
+    setLoading(true);
     const params = new URLSearchParams();
     if (currentSearch) params.set('search', currentSearch);
     if (page > 1) params.set('page', String(page));

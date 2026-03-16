@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -318,9 +319,9 @@ export default function MissionsPage() {
                   className="flex items-center justify-between rounded-xl border border-neutral p-4"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-sm border border-neutral">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-sm border border-neutral overflow-hidden relative">
                       {item.profiles?.avatar_url ? (
-                        <img src={item.profiles.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
+                        <Image src={item.profiles.avatar_url} alt="" fill className="object-cover" sizes="40px" />
                       ) : "👤"}
                     </div>
                     <div>

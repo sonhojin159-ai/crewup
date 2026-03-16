@@ -54,6 +54,7 @@ export default function AdminRewardsPage() {
   const [editMemo, setEditMemo] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const fetchOrders = useCallback(async (status: string) => {
     setLoading(true);
@@ -105,6 +106,13 @@ export default function AdminRewardsPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    });
   };
 
   return (
@@ -216,12 +224,53 @@ export default function AdminRewardsPage() {
             </p>
 
             {/* 배송지 정보 */}
-            <div className="mt-4 rounded-xl bg-surface p-4 text-sm space-y-1">
-              <p><span className="text-foreground-muted">수령인:</span> <span className="font-medium">{editOrder.recipient_name}</span></p>
-              <p><span className="text-foreground-muted">연락처:</span> <span className="font-medium">{editOrder.recipient_phone}</span></p>
-              <p><span className="text-foreground-muted">주소:</span> <span className="font-medium">{editOrder.recipient_address}</span></p>
-              <p><span className="text-foreground-muted">동의 시각:</span> <span className="font-medium">{new Date(editOrder.consented_at).toLocaleString("ko-KR")}</span></p>
+            <div className="mt-4 rounded-xl bg-surface p-4 text-sm space-y-2 border border-neutral/50">
+              <div className="flex justify-between items-center group">
+                <p><span className="text-foreground-muted">수령인:</span> <span className="font-medium">{editOrder.recipient_name}</span></p>
+                <button 
+                  onClick={() => copyToClipboard(editOrder.recipient_name)}
+                  className="text-[10px] text-primary hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  복사
+                </button>
+              </div>
+              <div className="flex justify-between items-center group">
+                <p><span className="text-foreground-muted">연락처:</span> <span className="font-medium">{editOrder.recipient_phone}</span></p>
+                <button 
+                  onClick={() => copyToClipboard(editOrder.recipient_phone)}
+                  className="text-[10px] text-primary hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  복사
+                </button>
+              </div>
+              <div className="flex justify-between items-start group">
+                <p className="flex-1"><span className="text-foreground-muted">주소:</span> <span className="font-medium">{editOrder.recipient_address}</span></p>
+                <button 
+                  onClick={() => copyToClipboard(editOrder.recipient_address)}
+                  className="text-[10px] text-primary hover:underline opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2"
+                >
+                  복사
+                </button>
+              </div>
+              <p><span className="text-foreground-muted">동의 시각:</span> <span className="font-medium text-xs">{new Date(editOrder.consented_at).toLocaleString("ko-KR")}</span></p>
+              
+              {editOrder.rewards_store?.original_url && (
+                <div className="pt-2 border-t border-dashed border-neutral mt-2">
+                  <a 
+                    href={editOrder.rewards_store.original_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block w-full text-center py-2 bg-primary/5 text-primary text-xs font-bold rounded-lg border border-primary/20 hover:bg-primary/10"
+                  >
+                    Partner Mall 상품 확인하러 가기 ↗
+                  </a>
+                </div>
+              )}
             </div>
+
+            {copySuccess && (
+              <div className="mt-2 text-center text-[10px] text-success-text font-medium">복사되었습니다!</div>
+            )}
 
             {saveError && (
               <div className="mt-3 rounded-xl bg-red-500/10 p-3 text-sm font-medium text-red-500">
