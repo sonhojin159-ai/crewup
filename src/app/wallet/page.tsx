@@ -168,12 +168,20 @@ export default function WalletPage() {
           {(["history", "shop", "inventory"] as const).map((t) => (
             <button
               key={t}
-              onClick={() => handleTabChange(t)}
+              onClick={() => {
+                if (t === "shop") {
+                  router.push("/rewards");
+                } else if (t === "inventory") {
+                  router.push("/rewards/orders");
+                } else {
+                  handleTabChange(t);
+                }
+              }}
               role="tab"
               aria-selected={tab === t}
               className={`tab-btn ${tab === t ? "tab-btn-active" : ""}`}
             >
-              {t === "history" ? "포인트 내역" : t === "shop" ? "기프티콘 교환" : "보관함"}
+              {t === "history" ? "포인트 내역" : t === "shop" ? "리워드 스토어" : "주문 내역"}
             </button>
           ))}
         </div>
@@ -213,7 +221,7 @@ export default function WalletPage() {
                         {item.note || (
                           item.type === 'charge' ? '포인트 충전' :
                           item.type === 'entry_payment' ? '크루 참여금' :
-                          item.type === 'gifticon' ? '기프티콘 교환' :
+                          item.type === 'gifticon' || item.type === 'reward_order' ? '리워드 주문' :
                           item.type
                         )}
                       </p>

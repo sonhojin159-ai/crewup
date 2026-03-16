@@ -131,12 +131,20 @@ export default function RewardsPage() {
                 {balance.toLocaleString()}P
               </p>
             </div>
-            <Link
-              href="/rewards/orders"
-              className="rounded-xl border border-neutral px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
-            >
-              주문 내역
-            </Link>
+            <div className="flex gap-2">
+              <Link
+                href="/rewards/orders"
+                className="rounded-xl border border-neutral px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary whitespace-nowrap"
+              >
+                주문 내역
+              </Link>
+              <Link
+                href="/wallet"
+                className="rounded-xl border border-neutral px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary whitespace-nowrap"
+              >
+                지갑으로 가기
+              </Link>
+            </div>
           </div>
         </div>
 
