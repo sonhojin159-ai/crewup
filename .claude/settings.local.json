@@ -60,7 +60,11 @@
       "Bash(npx tsc:*)",
       "Bash(taskkill //F //IM \"node.exe\" 2>/dev/null; sleep 2; echo \"done\")",
       "Bash(taskkill //F //IM node.exe 2>/dev/null; echo \"done\")",
-      "Bash(grep -i \"blacklist\\\\|CREATE TABLE blacklist\" docs/schema*.sql)"
+      "Bash(grep -i \"blacklist\\\\|CREATE TABLE blacklist\" docs/schema*.sql)",
+      "Bash(grep -E \"\\\\.\\(sql|md|txt\\)$\")",
+      "Bash(grep -l \"crew_messages\\\\|mission_submissions\" \"c:/Users/sonho/OneDrive/바탕 화면/Project_IDEA/docs/\"*.sql)",
+      "Bash(xargs grep -l \"import.*from.*gifticon\")",
+      "Bash(wc -l \"c:/Users/sonho/OneDrive/바탕 화면/Project_IDEA/docs\"/*.sql)"
     ]
   }
 }
