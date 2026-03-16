@@ -32,8 +32,7 @@ export async function GET(request: Request) {
       updated_at,
       address_deleted_at,
       profiles:user_id (
-        nickname,
-        email
+        nickname
       ),
       rewards_store:item_id (
         title,

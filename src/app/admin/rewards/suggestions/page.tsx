@@ -34,10 +34,14 @@ export default function RewardSuggestionsAdmin() {
         .select('*, profiles(nickname)')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Full Supabase Fetch Error:', error);
+        throw error;
+      }
       setSuggestions(data || []);
-    } catch (err) {
-      console.error('Fetch error:', err);
+    } catch (err: any) {
+      console.error('Caught Fetch error:', err);
+      // alert(`에러 발생: ${err.message || '알 수 없는 오류'}`); // Optional: alert for easier mobile/remote debugging
     } finally {
       setLoading(false);
     }
@@ -55,6 +59,26 @@ export default function RewardSuggestionsAdmin() {
       setSuggestions(prev => prev.map(s => s.id === id ? { ...s, status } : s));
     } catch (err) {
       console.error('Update error:', err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const deleteSuggestion = async (id: string) => {
+    if (!confirm('정말 이 제안을 삭제하시겠습니까?')) return;
+    
+    setUpdatingId(id);
+    try {
+      const { error } = await supabase
+        .from('reward_suggestions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      setSuggestions(prev => prev.filter(s => s.id !== id));
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('삭제 중 오류가 발생했습니다.');
     } finally {
       setUpdatingId(null);
     }
@@ -126,6 +150,16 @@ export default function RewardSuggestionsAdmin() {
                         <option value="added">스토어 추가</option>
                         <option value="rejected">반려</option>
                       </select>
+                      <button
+                        disabled={updatingId === s.id}
+                        onClick={() => deleteSuggestion(s.id)}
+                        className="p-1 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                        title="제안 삭제"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
