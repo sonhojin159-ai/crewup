@@ -40,23 +40,17 @@ export async function POST(
             throw rpcError;
         }
 
-        // 4. 크루 및 멤버 상태를 해산으로 업데이트
-        // (RLS 때문에 supabase service_role 키를 쓰거나, 자신이 만든 크루는 업데이트 가능)
+        // 4. 크루 상태를 'abandoned'(중단)로 업데이트하여 장부 보존
+        // 기존 'disbanded'는 물리적/논리적 삭제에 가깝지만, 'abandoned'는 멤버가 남을 수 있음.
         const { error: crewUpdateError } = await supabase
             .from('crews')
-            .update({ status: 'disbanded' })
+            .update({ status: 'abandoned' })
             .eq('id', id);
 
         if (crewUpdateError) throw crewUpdateError;
 
-        // 멤버들의 상태 변경 
-        // members 테이블에 업데이트 권한이 크루장에게 있는지(RLS) 확인
-        const { error: membersUpdateError } = await supabase
-            .from('crew_members')
-            .update({ status: 'disbanded' })
-            .eq('crew_id', id);
-
-        if (membersUpdateError) throw membersUpdateError;
+        // 멤버들의 상태는 disband 하지 않음 (장부 접근 권한 유지를 위해 active 유지)
+        // 단, 크루장 본인 혹은 원하는 시점에 나갈 수 있음 (이미 refund는 위 RPC에서 처리됨)
 
         return NextResponse.json({ success: true }, { status: 200 });
 

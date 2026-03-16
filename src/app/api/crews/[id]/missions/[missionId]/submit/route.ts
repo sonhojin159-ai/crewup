@@ -30,17 +30,21 @@ export async function POST(
             return NextResponse.json({ error: '인증 내용은 1000자 이하로 입력해주세요.' }, { status: 400 });
         }
 
-        // 크루 활성 멤버인지 확인
+        // 크루 활성 멤버인지 확인 + 크루장(생성자)인지 확인
         const { data: membership } = await supabase
             .from('crew_members')
-            .select('id')
+            .select('role')
             .eq('crew_id', id)
             .eq('user_id', user.id)
             .eq('status', 'active')
             .maybeSingle();
-
+        
         if (!membership) {
             return NextResponse.json({ error: '이 크루의 활성 멤버만 인증할 수 있습니다.' }, { status: 403 });
+        }
+
+        if (membership.role === 'owner') {
+            return NextResponse.json({ error: '크루장은 미션 인증에 참여할 수 없습니다.' }, { status: 403 });
         }
 
         // 미션 존재 확인

@@ -33,6 +33,7 @@ export default function Header() {
   const navLinks = [
     { href: "/crews", label: "크루 찾기" },
     { href: "/crews/new", label: "크루 만들기" },
+    { href: "/crews/joined", label: "내가 참여한 크루" },
     { href: "/wallet", label: "마이 월렛" },
   ];
 

@@ -11,9 +11,11 @@ import { Crew } from "@/types/crew";
 
 interface SubmissionFeed {
   id: string;
+  mission_id: string;
   content: string;
   status: string;
   created_at: string;
+  submitted_by: string;
   profiles: { nickname: string; avatar_url: string | null };
   missions: { title: string };
 }
@@ -28,8 +30,8 @@ export default function MissionsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feed, setFeed] = useState<SubmissionFeed[]>([]);
   const [feedLoading, setFeedLoading] = useState(true);
-  const [rewardLoading, setRewardLoading] = useState(false);
-  const [rewardMessage, setRewardMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchCrewMissions = useCallback(async () => {
     setIsLoading(true);
@@ -37,6 +39,7 @@ export default function MissionsPage() {
 
     // 현재 로그인 사용자 조회
     const { data: { user } } = await supabase.auth.getUser();
+    if (user) setCurrentUserId(user.id);
 
     const { data, error } = await supabase
       .from("crews")
@@ -67,11 +70,13 @@ export default function MissionsPage() {
         leaderFeeDeposit: data.leader_fee_deposit || 0,
         leaderMarginRate: data.leader_margin_rate || 0,
         missionRewardRate: data.mission_reward_rate || 0,
+        status: data.status || 'active',
+        createdBy: data.created_by,
         missions: (data.missions || []).map((m: any) => ({
           ...m,
           // 현재 사용자의 인증 완료 여부로 판단 (개인별 기준)
           completed: user
-            ? (m.mission_verifications || []).some(
+            ? (Array.isArray(m.mission_verifications) ? m.mission_verifications : []).some(
                 (v: { user_id: string; distribution_status: string }) =>
                   v.user_id === user.id && v.distribution_status === 'completed'
               )
@@ -132,26 +137,42 @@ export default function MissionsPage() {
     }
   };
 
-  // M5 Fix: 실제 API 호출로 리워드 신청
-  const handleRewardClaim = async (missionId: string) => {
-    if (rewardLoading) return;
-    setRewardLoading(true);
-    setRewardMessage(null);
+
+  const handleVerifySubmission = async (submission: SubmissionFeed, action: "approve" | "reject") => {
+    if (actionLoading) return;
+    
+    let reason = "";
+    if (action === "reject") {
+      reason = prompt("반려 사유를 입력해주세요 (선택사항)") || "";
+    } else if (!confirm("이 인증을 승인하시겠습니까? 리워드가 즉시 배분됩니다.")) {
+      return;
+    }
+
+    setActionLoading(submission.id);
     try {
-      const res = await fetch(`/api/crews/${id}/missions/${missionId}/reward`, {
+      const endpoint = action === "approve" ? "verify" : "reject";
+      const payload = action === "approve" 
+        ? { submissionId: submission.id }
+        : { submissionId: submission.id, reason };
+
+      const res = await fetch(`/api/crews/${id}/missions/${submission.mission_id}/${endpoint}`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
+
       const data = await res.json();
       if (!res.ok) {
-        setRewardMessage({ type: "error", text: data.error || "리워드 신청에 실패했습니다." });
+        alert(data.error || "처리에 실패했습니다.");
       } else {
-        setRewardMessage({ type: "success", text: data.message || "리워드가 지급되었습니다!" });
-        fetchCrewMissions();
+        alert(action === "approve" ? "인증이 성공적으로 승인되었습니다." : "인증이 반려되었습니다.");
+        fetchFeed();
+        fetchCrewMissions(); // 미션 완료 상태 업데이트
       }
     } catch {
-      setRewardMessage({ type: "error", text: "리워드 신청 중 오류가 발생했습니다." });
+      alert("처리 중 오류가 발생했습니다.");
     } finally {
-      setRewardLoading(false);
+      setActionLoading(null);
     }
   };
 
@@ -203,87 +224,35 @@ export default function MissionsPage() {
           <span className="text-foreground">미션</span>
         </nav>
 
-        {/* Progress Ring */}
-        <div className="flex flex-col items-center rounded-2xl border border-neutral bg-white p-8">
-          <div className="relative flex h-36 w-36 items-center justify-center">
-            <svg className="h-36 w-36 -rotate-90" viewBox="0 0 144 144">
-              <circle cx="72" cy="72" r="62" fill="none" stroke="currentColor" strokeWidth="10" className="text-neutral/50" />
-              <circle
-                cx="72" cy="72" r="62" fill="none"
-                stroke="currentColor" strokeWidth="10" strokeLinecap="round"
-                strokeDasharray={`${2 * Math.PI * 62}`}
-                strokeDashoffset={`${2 * Math.PI * 62 * (1 - rate / 100)}`}
-                className={rate >= 80 ? "text-success-text" : "text-primary"}
-              />
-            </svg>
-            <div className="absolute text-center">
-              <p className="text-3xl font-bold text-foreground">{rate}%</p>
-              <p className="text-xs text-foreground-muted">{done}/{total} 완료</p>
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-foreground-muted">
-            {rewardAvailable ? "리워드 신청이 가능합니다!" : "80% 이상 달성 시 리워드 신청 가능"}
-          </p>
 
-          {/* Reward Message */}
-          {rewardMessage && (
-            <div className={`mt-3 rounded-xl px-4 py-2.5 text-sm font-medium ${rewardMessage.type === "success" ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-500"}`}>
-              {rewardMessage.text}
-            </div>
-          )}
-
-          <button
-            disabled={!rewardAvailable || rewardLoading}
-            onClick={rewardAvailable ? () => handleRewardClaim(missions.find((m) => !m.completed)?.id || missions[0]?.id) : undefined}
-            className={`mt-4 rounded-xl px-8 py-3 text-sm font-semibold transition-colors ${
-              rewardAvailable && !rewardLoading
-                ? "bg-success-text text-white hover:opacity-90"
-                : "bg-neutral/30 text-foreground-muted cursor-not-allowed"
-            }`}
-          >
-            {rewardLoading ? "처리 중..." : "리워드 신청"}
-          </button>
-        </div>
-
-        {/* Mission Cards */}
+        {/* Mission List (Passive Info for Leader, Action for Member) */}
         <div className="mt-8">
-          <h3 className="text-xl font-bold text-foreground">미션 목록</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-foreground">크루 미션 정보</h3>
+            <span className="text-xs text-foreground-muted">총 {total}개의 미션이 설정되어 있습니다</span>
+          </div>
           <div className="mt-4 space-y-3">
             {crew.missions.map((mission, idx) => (
               <div
                 key={mission.id}
-                className={`rounded-xl border p-5 ${
-                  mission.completed ? "border-success bg-success/20" : "border-neutral"
-                }`}
+                className="rounded-xl border border-neutral p-5 bg-white"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
-                    <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                        mission.completed
-                          ? "bg-success-text text-white"
-                          : "bg-surface text-foreground-muted border border-neutral"
-                      }`}
-                    >
-                      {mission.completed ? "✓" : idx + 1}
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold bg-surface text-foreground-muted border border-neutral">
+                      {idx + 1}
                     </div>
                     <div>
-                      <p className={`font-semibold ${mission.completed ? "text-success-text" : "text-foreground"}`}>
+                      <p className="font-semibold text-foreground">
                         {mission.title}
                       </p>
                       <p className="mt-1 text-sm text-foreground-muted">{mission.description}</p>
-                      {mission.completed && (
-                        <button
-                          onClick={() => handleRewardClaim(mission.id)}
-                          disabled={rewardLoading}
-                          className="mt-2 rounded-lg px-3 py-1 text-xs font-semibold bg-success-text/10 text-success-text hover:bg-success-text/20 transition-colors disabled:opacity-50"
-                        >
-                          🎁 리워드 신청
-                        </button>
-                      )}
+                      <p className="mt-2 text-[11px] font-medium text-primary bg-primary/5 inline-block px-2 py-0.5 rounded-md">
+                        인당 리워드: {crew.deposit && crew.missionRewardRate ? Math.floor((crew.deposit * (crew.missionRewardRate / 100)) / total / 100) * 100 : 0}P
+                      </p>
                     </div>
                   </div>
-                  {!mission.completed && (
+                  {!mission.completed && crew.createdBy !== currentUserId && (
                     <button
                       onClick={() => setModalMission({ id: mission.id, title: mission.title })}
                       className="btn-primary !py-2 !px-4 !text-xs !rounded-lg"
@@ -291,7 +260,7 @@ export default function MissionsPage() {
                       인증하기
                     </button>
                   )}
-                  {mission.completed && (
+                  {mission.completed && crew.createdBy !== currentUserId && (
                     <span className="badge-success">완료</span>
                   )}
                 </div>
@@ -342,6 +311,24 @@ export default function MissionsPage() {
                         </span>
                       </div>
                     </div>
+                    {crew.createdBy === currentUserId && item.status === "pending" && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleVerifySubmission(item, "reject")}
+                          disabled={!!actionLoading}
+                          className="rounded-lg border border-neutral px-3 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-neutral/10 disabled:opacity-50"
+                        >
+                          반려
+                        </button>
+                        <button
+                          onClick={() => handleVerifySubmission(item, "approve")}
+                          disabled={!!actionLoading}
+                          className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                        >
+                          {actionLoading === item.id ? "처리 중..." : "승인"}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))

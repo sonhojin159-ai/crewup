@@ -62,6 +62,8 @@ export default function DashboardPage() {
       leaderFeeDeposit: cData.leader_fee_deposit,
       leaderMarginRate: cData.leader_margin_rate,
       missionRewardRate: cData.mission_reward_rate,
+      status: cData.status || 'active',
+      createdBy: cData.created_by,
     });
 
     // 2. 멤버 목록 (Active & Pending)
@@ -143,39 +145,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleVerifyMission = async (missionId: string, missionTitle: string) => {
-    if (!confirm(`[${missionTitle}] 미션을 인증 처리하시겠습니까?\n해당 미션에 배정된 리워드가 크루원들에게 배분됩니다.`)) return;
-    setIsProcessing(true);
-    try {
-      // pending 제출건 조회
-      const feedRes = await fetch(`/api/crews/${id}/missions/feed`);
-      if (!feedRes.ok) throw new Error('인증 피드 조회에 실패했습니다.');
-      const feed: Array<{ id: string; mission_id: string; status: string }> = await feedRes.json();
-      const pendingSubmission = feed.find(s => s.mission_id === missionId && s.status === 'pending');
-
-      if (!pendingSubmission) {
-        alert('대기 중인 인증 신청이 없습니다.');
-        setIsProcessing(false);
-        return;
-      }
-
-      const res = await fetch(`/api/crews/${id}/missions/${missionId}/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submissionId: pendingSubmission.id }),
-      });
-      if (!res.ok) {
-         const data = await res.json();
-         throw new Error(data.error);
-      }
-      alert('인증 및 자동 배분이 완료되었습니다.');
-      fetchDashboardData();
-    } catch (e: any) {
-      alert(`인증 실패: ${e.message}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const handleDisband = async () => {
     if (!confirm("정말 크루를 해산하시겠습니까?\n남은 에스크로 금액은 크루원 전원에게 전액 환급되며, 이 작업은 되돌릴 수 없으며 크루는 삭제 상태로 전환됩니다.")) return;
@@ -288,38 +257,6 @@ export default function DashboardPage() {
         {/* --- 트랙별 분기 --- */}
         {crew.track === 'mission' ? (
           <>
-            {/* --- 2. 미션 인증 --- */}
-            <div className="mt-8">
-              <h3 className="text-xl font-bold text-foreground">미션 인증 & 배분</h3>
-              <div className="mt-4 space-y-3">
-                {missions.length === 0 ? (
-                  <p className="text-sm text-foreground-muted">등록된 미션이 없습니다.</p>
-                ) : (
-                  missions.map((m) => {
-                    const isVerified = verifiedMissionIds.includes(m.id);
-                    return (
-                      <div key={m.id} className="flex items-center justify-between rounded-xl border border-neutral p-4">
-                        <div>
-                          <p className="font-medium">{m.title}</p>
-                          <p className="text-xs text-foreground-muted">인당 리워드: {(m as any).reward_points || 0}P</p>
-                        </div>
-                        {isVerified ? (
-                          <span className="badge-success">인증 및 배분 완료</span>
-                        ) : (
-                          <button
-                            disabled={isProcessing}
-                            onClick={() => handleVerifyMission(m.id, m.title)}
-                            className="btn-outline !text-success-text !border-success-text !px-4 !py-2 text-sm hover:!bg-success-text hover:!text-white"
-                          >
-                            인증 처리
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
 
             {/* --- 3. 에스크로 현황 --- */}
             <div className="mt-8">

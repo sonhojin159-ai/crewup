@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         const {
             title, category, roleType, track, description, maxMembers, tags,
             entryPoints, leaderMarginRate, missionRewardRate, missions,
-            deposit,
+            deposit, activityDays,
         } = body;
 
         // 필수값 검증
@@ -107,8 +107,9 @@ export async function POST(request: Request) {
             p_leader_margin_rate:  leaderRate,
             p_mission_reward_rate: rewardRate,
             p_missions:            (track === 'mission' && missions?.length > 0)
-                                     ? JSON.stringify(missions)
+                                     ? missions
                                      : null,
+            p_activity_days:       Number(activityDays) || 7,
         });
 
         if (rpcError) {
@@ -135,13 +136,33 @@ export async function GET(request: Request) {
     const role = searchParams.get('role');
     const track = searchParams.get('track');
     const searchQuery = searchParams.get('search');
+    const filter = searchParams.get('filter'); // Joined filter
 
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    let query = supabase
-        .from('crews')
-        .select('*, crew_members(count)')
-        .eq('status', 'active');
+    let query;
+
+    if (filter === 'joined') {
+        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // 내가 참여한 크루: 내 멤버십 정보가 있어야 하며, 거절되지 않은 것만
+        // 필터링용 inner join과 표시용 count join을 분리하여 정확한 데이터 조회
+        query = supabase
+            .from('crews')
+            .select(`
+                *,
+                my_membership:crew_members!inner(user_id, status),
+                crew_members(count)
+            `)
+            .eq('my_membership.user_id', user.id)
+            .neq('my_membership.status', 'rejected');
+    } else {
+        // 공개 목록: 단순히 active 상태인 크루 (inner join 없이 count만 가져옴)
+        query = supabase
+            .from('crews')
+            .select('*, crew_members(count)')
+            .eq('status', 'active');
+    }
 
     if (category && category !== '전체') {
         query = query.eq('category', category);

@@ -16,11 +16,13 @@ export interface Crew {
   leaderFeeDeposit: number;
   leaderMarginRate: number;
   missionRewardRate: number;
+  status: string;
+  createdBy: string;
 }
 
 export type CrewSummary = Pick<
   Crew,
-  'id' | 'title' | 'category' | 'members' | 'maxMembers' | 'description' | 'tags' | 'roleType' | 'track'
+  'id' | 'title' | 'category' | 'members' | 'maxMembers' | 'description' | 'tags' | 'roleType' | 'track' | 'status'
 >;
 
 export interface Mission {

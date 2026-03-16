@@ -33,8 +33,9 @@ export default function NewCrewPage() {
   const [maxMembers, setMaxMembers] = useState(6);
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  const [missions, setMissions] = useState<{ title: string; rewardPoints: number }[]>([]);
+  const [missions, setMissions] = useState<{ title: string }[]>([]);
   const [deposit, setDeposit] = useState(0);
+  const [activityPeriodDays, setActivityPeriodDays] = useState(7);
   
   // Entry fee is auto-calculated based on max members
   const entryPoints = maxMembers < 6 ? 3000 : 5000;
@@ -49,7 +50,7 @@ export default function NewCrewPage() {
   const handleCategoryChange = (cat: string) => {
     setCategory(cat);
     const presets = MISSION_PRESETS[cat] || [];
-    setMissions(presets.map((t) => ({ title: t, rewardPoints: 0 })));
+    setMissions(presets.map((t) => ({ title: t })));
   };
 
   const addTag = () => {
@@ -65,18 +66,12 @@ export default function NewCrewPage() {
   };
 
   const addMission = () => {
-    setMissions([...missions, { title: "", rewardPoints: 0 }]);
+    setMissions([...missions, { title: "" }]);
   };
 
   const updateMissionTitle = (index: number, value: string) => {
     const updated = [...missions];
     updated[index] = { ...updated[index], title: value };
-    setMissions(updated);
-  };
-
-  const updateMissionReward = (index: number, value: number) => {
-    const updated = [...missions];
-    updated[index] = { ...updated[index], rewardPoints: value };
     setMissions(updated);
   };
 
@@ -154,6 +149,7 @@ export default function NewCrewPage() {
           leaderMarginRate,
           missionRewardRate,
           deposit,
+          activityDays: activityPeriodDays,
           missions: track === 'mission' ? missions.filter((m) => m.title.trim()) : undefined,
         }),
       });
@@ -316,6 +312,25 @@ export default function NewCrewPage() {
               {[3, 4, 5, 6, 8, 10, 15, 20].map((n) => (
                 <option key={n} value={n}>{n}명</option>
               ))}
+            </select>
+          </div>
+
+          {/* ── 활동 기간 (NEW) ── */}
+          <div>
+            <label htmlFor="activity-period" className="form-label form-label-required">활동 기간</label>
+            <p className="form-hint mb-3">크루 활동이 종료되는 시점을 설정합니다. (종료 시 미수행 미션금 정산)</p>
+            <select
+              id="activity-period"
+              value={activityPeriodDays}
+              onChange={(e) => setActivityPeriodDays(Number(e.target.value))}
+              className="form-input w-auto min-w-[120px]"
+            >
+              <option value={3}>3일 (테스트/단기)</option>
+              <option value={7}>7일 (1주)</option>
+              <option value={14}>14일 (2주)</option>
+              <option value={30}>30일 (약 1달)</option>
+              <option value={60}>60일 (2달)</option>
+              <option value={90}>90일 (3달)</option>
             </select>
           </div>
 
@@ -570,43 +585,52 @@ export default function NewCrewPage() {
                 생성 후 미션은 수정할 수 없습니다. 신중하게 설정해주세요.
               </p>
               <div className="space-y-3">
-                {missions.map((mission, index) => (
-                  <div key={index} className="flex gap-2 items-start">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface text-sm font-semibold text-foreground-muted border border-neutral mt-0.5">
-                      {index + 1}
-                    </span>
-                    <div className="flex-1 space-y-1.5">
-                      <input
-                        type="text"
-                        value={mission.title}
-                        onChange={(e) => updateMissionTitle(index, e.target.value)}
-                        placeholder={`미션 ${index + 1} 제목`}
-                        className="form-input"
-                        aria-label={`미션 ${index + 1} 제목`}
-                      />
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          min={0}
-                          value={mission.rewardPoints}
-                          onChange={(e) => updateMissionReward(index, Math.max(0, Number(e.target.value)))}
-                          placeholder="리워드"
-                          className="form-input w-32 !py-2 text-sm"
-                          aria-label={`미션 ${index + 1} 리워드 포인트`}
-                        />
-                        <span className="text-xs text-foreground-muted">P / 달성 시</span>
+                {missions.map((mission, index) => {
+                  const pointsPerMission = missions.length > 0 ? Math.floor(deposit / missions.length) : 0;
+                  const memberShare = Math.ceil((pointsPerMission * (missionRewardRate / 100)) / 100) * 100;
+                  const leaderShare = pointsPerMission - memberShare;
+
+                  return (
+                    <div key={index} className="space-y-2">
+                      <div className="flex gap-2 items-start">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface text-sm font-semibold text-foreground-muted border border-neutral mt-0.5">
+                          {index + 1}
+                        </span>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={mission.title}
+                            onChange={(e) => updateMissionTitle(index, e.target.value)}
+                            placeholder={`미션 ${index + 1} 제목`}
+                            className="form-input"
+                            aria-label={`미션 ${index + 1} 제목`}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeMission(index)}
+                          className="btn-destructive !py-2.5 mt-0.5"
+                          aria-label={`미션 ${index + 1} 삭제`}
+                        >
+                          삭제
+                        </button>
                       </div>
+                      {missions.length > 0 && pointsPerMission > 0 && (
+                        <div className="ml-13 flex flex-wrap gap-3 text-[11px] font-medium">
+                          <span className="flex items-center gap-1 text-success-text bg-success/10 px-2 py-0.5 rounded-md border border-success/20">
+                            👤 크루원: {memberShare.toLocaleString()}P
+                          </span>
+                          <span className="flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
+                            👑 크루장: {leaderShare.toLocaleString()}P
+                          </span>
+                          <span className="text-foreground-muted py-0.5 italic">
+                            (미션 가액: {pointsPerMission.toLocaleString()}P)
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => removeMission(index)}
-                      className="btn-destructive !py-2.5 mt-0.5"
-                      aria-label={`미션 ${index + 1} 삭제`}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <button
                 type="button"
@@ -663,11 +687,8 @@ export default function NewCrewPage() {
               <div className="flex justify-between py-2">
                 <span className="text-foreground-muted">트랙 (운영 방식)</span>
                 <span className="font-semibold text-foreground text-right">
-                  {track === 'mission' ? '🔥 미션 달성형' : '💰 수익 분배형'}
+                  {track === 'mission' ? '🔥 미션 달성형' : '💰 수익 분배형'} ({activityPeriodDays}일 정산)
                 </span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="font-semibold text-foreground">{entryPoints.toLocaleString()}P</span>
               </div>
               <div className="flex justify-between py-2">
                 <span className="text-foreground-muted">크루원 개별 예치금</span>

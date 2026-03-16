@@ -26,6 +26,7 @@ export default async function Home() {
     maxMembers: row.max_members as number,
     tags: (row.tags as string[]) || [],
     track: row.track as CrewSummary["track"],
+    status: (row.status as string) || 'active',
     members: ((row.crew_members as { count: number }[])?.[0]?.count) || 0,
   }));
   return (
