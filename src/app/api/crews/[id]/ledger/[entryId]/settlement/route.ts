@@ -14,6 +14,15 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // 멤버십 검증: 크루 멤버 또는 크루장만 정산 내역 조회 가능
+  const [{ data: crew }, { data: membership }] = await Promise.all([
+    supabase.from('crews').select('created_by').eq('id', id).single(),
+    supabase.from('crew_members').select('id').eq('crew_id', id).eq('user_id', user.id).eq('status', 'active').maybeSingle(),
+  ]);
+  if (!crew || (crew.created_by !== user.id && !membership)) {
+    return NextResponse.json({ error: '크루 멤버만 정산 내역을 조회할 수 있습니다.' }, { status: 403 });
+  }
+
   const { data, error } = await supabase
     .from('settlement_transfers')
     .select(`

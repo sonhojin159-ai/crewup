@@ -53,7 +53,19 @@ export async function POST(
             return NextResponse.json({ error: '이미 승인된 제출건입니다.' }, { status: 400 });
         }
 
-        // 3. 인증 내역 INSERT (개별 제출 건에 대해 생성)
+        // 3. submission 상태를 먼저 'approved'로 원자적 업데이트 (중복 승인 방지)
+        const { data: updated } = await supabase
+            .from('mission_submissions')
+            .update({ status: 'approved' })
+            .eq('id', submissionId)
+            .eq('status', 'pending')
+            .select('id');
+
+        if (!updated || updated.length === 0) {
+            return NextResponse.json({ error: '이미 처리된 제출건입니다.' }, { status: 409 });
+        }
+
+        // 4. 인증 내역 INSERT (개별 제출 건에 대해 생성)
         const { data: verification, error: insertError } = await supabase
             .from('mission_verifications')
             .insert({
@@ -61,7 +73,7 @@ export async function POST(
                 crew_id: id,
                 verified_by: user.id,
                 submission_id: submissionId,
-                user_id: submission.submitted_by, // 제출한 유저
+                user_id: submission.submitted_by,
                 note: note || null
             })
             .select('id')
@@ -69,13 +81,13 @@ export async function POST(
 
         if (insertError) throw insertError;
 
-        // 4. 개별 리워드 배분 RPC 호출
+        // 5. 개별 리워드 배분 RPC 호출
         const { error: rpcError } = await supabase.rpc('distribute_individual_mission_reward', {
             p_verification_id: verification.id,
         });
 
         if (rpcError) {
-             console.error('RPC Error:', rpcError);
+            console.error('RPC Error:', rpcError);
             throw rpcError;
         }
 
