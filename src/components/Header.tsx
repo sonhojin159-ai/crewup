@@ -20,7 +20,7 @@ export default function Header() {
     getUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setUser(session?.user || null);
       }
     );
@@ -34,6 +34,7 @@ export default function Header() {
     { href: "/crews", label: "크루 찾기" },
     { href: "/crews/new", label: "크루 만들기" },
     { href: "/crews/joined", label: "내가 참여한 크루" },
+    { href: "/rewards", label: "리워드 스토어" },
     { href: "/wallet", label: "마이 월렛" },
   ];
 

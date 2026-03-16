@@ -57,7 +57,7 @@ export function SuggestionModal({ isOpen, onClose }: SuggestionModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-md overflow-hidden rounded-3xl bg-surface shadow-2xl animate-in fade-in zoom-in duration-200">
+      <div className="w-full max-w-md overflow-hidden rounded-3xl bg-surface shadow-2xl">
         <div className="px-6 py-6 sm:px-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-foreground">리워드 상품 제안하기</h2>
@@ -72,7 +72,7 @@ export function SuggestionModal({ isOpen, onClose }: SuggestionModalProps) {
           </div>
 
           {success ? (
-            <div className="py-12 text-center animate-in fade-in slide-in-from-bottom-4">
+            <div className="py-12 text-center">
               <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10">
                 <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
