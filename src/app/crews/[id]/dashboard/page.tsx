@@ -125,6 +125,24 @@ export default function DashboardPage() {
     }
   };
 
+  const handleRejectMember = async (memberId: string, nickname: string) => {
+    if (!confirm(`[${nickname}] 님의 가입 신청을 반려하시겠습니까?\n반려된 신청자는 이 크루에 재신청할 수 없습니다.`)) return;
+    setIsProcessing(true);
+    try {
+      const res = await fetch(`/api/crews/${id}/reject/${memberId}`, { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
+      }
+      alert('신청이 반려되었습니다.');
+      fetchDashboardData();
+    } catch (e: any) {
+      alert(`반려 실패: ${e.message}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleVerifyMission = async (missionId: string, missionTitle: string) => {
     if (!confirm(`[${missionTitle}] 미션을 인증 처리하시겠습니까?\n해당 미션에 배정된 리워드가 크루원들에게 배분됩니다.`)) return;
     setIsProcessing(true);
@@ -217,13 +235,22 @@ export default function DashboardPage() {
                     <p className="font-medium">{pm.profiles?.nickname || '익명'}</p>
                     <p className="text-xs text-foreground-muted">신청일: {new Date(pm.created_at).toLocaleDateString()}</p>
                   </div>
-                  <button 
-                    disabled={isProcessing}
-                    onClick={() => handleApproveMember(pm.id)}
-                    className="btn-primary !px-4 !py-2 !py-auto text-sm"
-                  >
-                    결제 및 승인
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      disabled={isProcessing}
+                      onClick={() => handleRejectMember(pm.id, pm.profiles?.nickname || '익명')}
+                      className="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+                    >
+                      반려
+                    </button>
+                    <button
+                      disabled={isProcessing}
+                      onClick={() => handleApproveMember(pm.id)}
+                      className="btn-primary !px-4 !py-2 text-sm"
+                    >
+                      결제 및 승인
+                    </button>
+                  </div>
                  </div>
               ))
             )}

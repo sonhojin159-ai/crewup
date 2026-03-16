@@ -9,6 +9,8 @@ const NAV_ITEMS = [
   { href: '/admin/blacklist', label: '블랙리스트', exact: false },
   { href: '/admin/users', label: '사용자 관리', exact: false },
   { href: '/admin/gifticons', label: '기프티콘 관리', exact: false },
+  { href: '/admin/rewards', label: '리워드 주문', exact: true },
+  { href: '/admin/rewards/products', label: '상품 관리', exact: false },
 ] as const;
 
 export function AdminSidebarNav() {

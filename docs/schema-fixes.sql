@@ -35,6 +35,115 @@ ALTER TABLE settlement_transfers ADD COLUMN IF NOT EXISTS is_settled BOOLEAN NOT
 -- [C3] crew_members에 joined_at 컬럼 추가 (분배 순서 결정용)
 ALTER TABLE crew_members ADD COLUMN IF NOT EXISTS joined_at TIMESTAMPTZ DEFAULT now();
 
+-- [F1] crew_members 반려(reject) 기능 지원
+-- status CHECK 제약에 'rejected' 추가 및 rejected_at 컬럼 추가
+ALTER TABLE crew_members
+DROP CONSTRAINT IF EXISTS crew_members_status_check;
+
+ALTER TABLE crew_members
+ADD CONSTRAINT crew_members_status_check
+CHECK (status IN ('pending', 'active', 'left', 'kicked', 'rejected', 'disbanded'));
+
+ALTER TABLE crew_members ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMPTZ;
+
+-- =============================================
+-- [F2] process_full_refund_v2 수정
+-- 기존: 크루장 leader_fee_deposit 전액 소멸 (버그)
+-- 수정: 미충원 슬롯 예치금을 크루장에게 환급
+--       (실제 활성 멤버 수 × entry_points)는 플랫폼 수수료(패널티)로 유지
+-- =============================================
+CREATE OR REPLACE FUNCTION process_full_refund_v2(p_crew_id UUID)
+RETURNS void AS $$
+DECLARE
+  v_hold              RECORD;
+  v_refund_amount     INTEGER;
+  v_balance           INTEGER;
+  v_leader_id         UUID;
+  v_leader_fee_deposit INTEGER;
+  v_entry_points      INTEGER;
+  v_active_count      INTEGER;
+  v_leader_refund     INTEGER;
+  v_leader_balance    INTEGER;
+BEGIN
+  -- 크루 정보 조회
+  SELECT created_by, leader_fee_deposit, entry_points
+  INTO v_leader_id, v_leader_fee_deposit, v_entry_points
+  FROM crews
+  WHERE id = p_crew_id;
+
+  -- 실제 활성 멤버 수 (크루장 제외)
+  SELECT COUNT(*) INTO v_active_count
+  FROM crew_members
+  WHERE crew_id = p_crew_id
+    AND status  = 'active'
+    AND user_id != v_leader_id;
+
+  -- 크루원 escrow 전액 환불
+  FOR v_hold IN
+    SELECT id, member_user_id, amount, released_amount
+    FROM escrow_holds
+    WHERE crew_id = p_crew_id
+      AND status IN ('holding', 'partially_released')
+    FOR UPDATE
+  LOOP
+    v_refund_amount := v_hold.amount - v_hold.released_amount;
+
+    IF v_refund_amount > 0 THEN
+      SELECT balance INTO v_balance
+      FROM user_points
+      WHERE user_id = v_hold.member_user_id
+      FOR UPDATE;
+
+      UPDATE user_points
+      SET balance       = balance + v_refund_amount,
+          escrow_balance = escrow_balance - v_refund_amount,
+          updated_at    = now()
+      WHERE user_id = v_hold.member_user_id
+      RETURNING balance INTO v_balance;
+
+      UPDATE escrow_holds
+      SET status = 'refunded', updated_at = now()
+      WHERE id = v_hold.id;
+
+      INSERT INTO point_transactions (user_id, type, amount, balance_after, crew_id, note)
+      VALUES (v_hold.member_user_id, 'refund', v_refund_amount, v_balance, p_crew_id, '크루 해산에 따른 참여금 환불');
+    END IF;
+  END LOOP;
+
+  -- 크루장 예치금 환급: 미충원 슬롯분만 돌려줌
+  -- 패널티: 실제 활성 멤버 수 × entry_points (플랫폼 수수료)
+  -- 환급: leader_fee_deposit - (active_count × entry_points)
+  IF v_leader_fee_deposit > 0 THEN
+    v_leader_refund := v_leader_fee_deposit - (v_active_count * v_entry_points);
+    v_leader_refund := GREATEST(0, v_leader_refund); -- 음수 방지
+
+    IF v_leader_refund > 0 THEN
+      SELECT balance INTO v_leader_balance
+      FROM user_points
+      WHERE user_id = v_leader_id
+      FOR UPDATE;
+
+      UPDATE user_points
+      SET balance    = balance + v_leader_refund,
+          updated_at = now()
+      WHERE user_id = v_leader_id;
+
+      INSERT INTO point_transactions (user_id, type, amount, balance_after, crew_id, note)
+      VALUES (
+        v_leader_id,
+        'refund',
+        v_leader_refund,
+        v_leader_balance + v_leader_refund,
+        p_crew_id,
+        format('크루 해산 - 미충원 슬롯 예치금 환급 (%s/%s명 충원)',
+               v_active_count,
+               v_leader_fee_deposit / NULLIF(v_entry_points, 0))
+      );
+    END IF;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- =============================================
 -- [C2] process_crew_creation RPC
 -- 크루 생성 예치금 차감 ~ 크루 생성 ~ 미션 생성을

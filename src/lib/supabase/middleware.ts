@@ -38,7 +38,7 @@ export async function updateSession(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     // You can add protection logic here, e.g.:
-    const protectedRoutes = ['/crews/new', '/wallet'];
+    const protectedRoutes = ['/crews/new', '/wallet', '/rewards'];
     const requestPath = request.nextUrl.pathname;
 
     // Check exact matches or startsWith for dashboard

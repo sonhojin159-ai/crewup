@@ -64,6 +64,9 @@ export async function POST(
             .maybeSingle();
 
         if (existingMember) {
+            if (existingMember.status === 'rejected') {
+                return NextResponse.json({ error: '크루장에 의해 반려된 신청입니다. 해당 크루에 재신청할 수 없습니다.' }, { status: 403 });
+            }
             return NextResponse.json({ error: '이미 참여 신청했거나 활동 중인 크루입니다.' }, { status: 400 });
         }
 

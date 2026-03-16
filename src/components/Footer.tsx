@@ -34,6 +34,11 @@ export default function Footer() {
                   마이 월렛
                 </Link>
               </li>
+              <li>
+                <Link href="/rewards" className="text-sm text-foreground-muted transition-colors hover:text-primary">
+                  리워드 스토어
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -68,6 +73,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/refund-policy" className="text-sm text-foreground-muted transition-colors hover:text-primary">
+                  환불 정책
+                </Link>
+              </li>
+              <li>
                 <Link href="/support" className="text-sm text-foreground-muted transition-colors hover:text-primary">
                   고객센터
                 </Link>
@@ -90,7 +100,7 @@ export default function Footer() {
               </p>
               <p>
                 <span className="font-semibold text-foreground">고객센터:</span> 070-8027-1918 |
-                <span className="ml-1 font-semibold text-foreground">이메일:</span> support@textfactory.io
+                <span className="ml-1 font-semibold text-foreground">이메일:</span> support@textfactory.kr
               </p>
             </div>
 
