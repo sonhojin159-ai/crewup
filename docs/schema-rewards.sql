@@ -102,8 +102,8 @@ BEGIN
     WHERE user_id = p_user_id;
 
   -- 4) 포인트 거래 기록
-  INSERT INTO point_transactions (user_id, amount, type, note)
-  VALUES (p_user_id, -v_item.point_price, 'reward_order', '리워드 상품 주문: ' || v_item.title);
+  INSERT INTO point_transactions (user_id, amount, type, note, balance_after)
+  VALUES (p_user_id, -v_item.point_price, 'reward_order', '리워드 상품 주문: ' || v_item.title, v_balance - v_item.point_price);
 
   -- 5) 주문 생성
   INSERT INTO reward_orders (user_id, item_id, recipient_name, recipient_phone, recipient_address, points_spent, consented_at)
@@ -132,3 +132,32 @@ ON CONFLICT (id) DO NOTHING;
 CREATE POLICY "rewards_images_public_read"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'rewards-images');
+-- ============================================================
+-- Reward Suggestions (유저 상품 제안)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS reward_suggestions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  product_url TEXT NOT NULL,
+  reason TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'added', 'rejected')),
+  admin_memo TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS
+ALTER TABLE reward_suggestions ENABLE ROW LEVEL SECURITY;
+
+-- 본인 제안만 조회
+CREATE POLICY "reward_suggestions_own_select" ON reward_suggestions
+  FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+-- 인증 유저 삽입 가능
+CREATE POLICY "reward_suggestions_own_insert" ON reward_suggestions
+  FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+
+-- 인덱스
+CREATE INDEX idx_reward_suggestions_user_id ON reward_suggestions(user_id);
+CREATE INDEX idx_reward_suggestions_status ON reward_suggestions(status);

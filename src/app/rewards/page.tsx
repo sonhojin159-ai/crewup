@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { SuggestionModal } from "@/components/SuggestionModal";
 
 interface RewardItem {
   id: string;
@@ -32,6 +33,9 @@ export default function RewardsPage() {
   const [ordering, setOrdering] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [orderSuccess, setOrderSuccess] = useState(false);
+
+  // 제안 모달 상태
+  const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -97,6 +101,7 @@ export default function RewardsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
+        console.error('Order API error:', { status: res.status, data });
         setOrderError(data.error || "주문에 실패했습니다.");
       } else {
         setOrderSuccess(true);
@@ -132,6 +137,12 @@ export default function RewardsPage() {
               </p>
             </div>
             <div className="flex gap-2">
+              <button
+                onClick={() => setIsSuggestionOpen(true)}
+                className="rounded-xl border border-primary bg-primary/5 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10 whitespace-nowrap"
+              >
+                상품 제안하기 🎁
+              </button>
               <Link
                 href="/rewards/orders"
                 className="rounded-xl border border-neutral px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary whitespace-nowrap"
@@ -385,6 +396,12 @@ export default function RewardsPage() {
           </div>
         </div>
       )}
+
+      {/* 상품 제안 모달 */}
+      <SuggestionModal 
+        isOpen={isSuggestionOpen} 
+        onClose={() => setIsSuggestionOpen(false)} 
+      />
 
       <Footer />
     </div>

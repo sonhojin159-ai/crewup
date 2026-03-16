@@ -82,11 +82,27 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    console.error('Reward order RPC error:', error);
-    return NextResponse.json({ error: '주문 처리 중 오류가 발생했습니다.' }, { status: 500 });
+    console.error('Reward order RPC error Details:', {
+      error,
+      userId: user.id,
+      itemId: item_id,
+      params: {
+        p_user_id: user.id,
+        p_item_id: item_id,
+        p_recipient_name: recipient_name.trim(),
+        p_recipient_phone: recipient_phone.trim(),
+        p_recipient_address: recipient_address.trim(),
+      }
+    });
+    return NextResponse.json({ error: '주문 처리 중 오류가 발생했습니다. (관리자 문의)' }, { status: 500 });
   }
 
   if (!data.success) {
+    console.error('Reward order process failed:', {
+      error: data.error,
+      userId: user.id,
+      itemId: item_id
+    });
     return NextResponse.json({ error: data.error }, { status: 400 });
   }
 
