@@ -15,12 +15,8 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        {/*
-          Pretendard Variable — best Korean UI font.
-          Loaded from CDN (jsDelivr mirrors the GitHub release).
-          For production, self-host via public/fonts/ and use next/font/local
-          to get the automatic preload and display:swap behaviour.
-        */}
+        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"

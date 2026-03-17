@@ -11,7 +11,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('rewards_store')
-    .select('id, title, description, image_url, point_price, is_available, created_at')
+    .select('id, title, description, image_url, point_price, is_available, category, created_at')
     .eq('is_available', true)
     .order('created_at', { ascending: false });
 

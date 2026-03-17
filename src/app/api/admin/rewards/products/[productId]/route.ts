@@ -22,6 +22,7 @@ export async function PATCH(
     original_url?: string;
     image_url?: string;
     is_available?: boolean;
+    category?: string;
   };
 
   try {
@@ -53,6 +54,7 @@ export async function PATCH(
   if (body.original_url !== undefined) updateData.original_url = body.original_url?.trim() || null;
   if (body.image_url !== undefined) updateData.image_url = body.image_url?.trim() || null;
   if (body.is_available !== undefined) updateData.is_available = body.is_available;
+  if (body.category !== undefined) updateData.category = body.category.trim();
 
   const { data, error } = await adminSupabase
     .from('rewards_store')

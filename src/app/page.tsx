@@ -6,7 +6,7 @@ import { CATEGORIES } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import { CrewSummary, RoleType } from "@/types/crew";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function Home() {
   const supabase = await createClient();

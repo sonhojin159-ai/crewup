@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -20,10 +20,24 @@ export default function CrewsPage() {
   const [selectedRole, setSelectedRole] = useState<RoleType | "all">("all");
   const [selectedTrack, setSelectedTrack] = useState<"all" | "mission" | "revenue_share">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [crews, setCrews] = useState<CrewSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
     const fetchCrews = async () => {
       setIsLoading(true);
       try {
@@ -31,9 +45,11 @@ export default function CrewsPage() {
         if (selectedCategory) queryParams.append('category', selectedCategory);
         if (selectedRole) queryParams.append('role', selectedRole);
         if (selectedTrack) queryParams.append('track', selectedTrack);
-        if (searchQuery) queryParams.append('search', searchQuery);
+        if (debouncedSearch) queryParams.append('search', debouncedSearch);
 
-        const res = await fetch(`/api/crews?${queryParams.toString()}`);
+        const res = await fetch(`/api/crews?${queryParams.toString()}`, {
+          signal: controller.signal,
+        });
         if (!res.ok) throw new Error('Failed to fetch crews');
 
         const data = await res.json();
@@ -61,6 +77,7 @@ export default function CrewsPage() {
         }));
         setCrews(mappedData);
       } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -68,7 +85,8 @@ export default function CrewsPage() {
     };
 
     fetchCrews();
-  }, [selectedCategory, selectedRole, selectedTrack, searchQuery]);
+    return () => controller.abort();
+  }, [selectedCategory, selectedRole, selectedTrack, debouncedSearch]);
 
   return (
     <div className="min-h-screen bg-background">

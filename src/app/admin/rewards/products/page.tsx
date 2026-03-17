@@ -11,6 +11,7 @@ interface Product {
   point_price: number;
   original_url: string | null;
   is_available: boolean;
+  category: string;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +23,7 @@ interface ProductForm {
   original_url: string;
   image_url: string;
   is_available: boolean;
+  category: string;
 }
 
 const EMPTY_FORM: ProductForm = {
@@ -31,7 +33,16 @@ const EMPTY_FORM: ProductForm = {
   original_url: "",
   image_url: "",
   is_available: true,
+  category: "MISC",
 };
+
+const CATEGORIES = [
+  { value: "FASHION", label: "패션/의류" },
+  { value: "FOOD", label: "식품/음료" },
+  { value: "IT", label: "IT/전자기기" },
+  { value: "APPLIANCE", label: "가전제품" },
+  { value: "MISC", label: "잡화/기타" },
+] as const;
 
 export default function AdminRewardsProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -79,6 +90,7 @@ export default function AdminRewardsProductsPage() {
       original_url: product.original_url ?? "",
       image_url: product.image_url ?? "",
       is_available: product.is_available,
+      category: product.category || "MISC",
     });
     setError(null);
     setModalOpen(true);
@@ -148,6 +160,7 @@ export default function AdminRewardsProductsPage() {
         original_url: form.original_url.trim() || null,
         image_url: form.image_url.trim() || null,
         is_available: form.is_available,
+        category: form.category,
       };
 
       const url = editingId
@@ -258,7 +271,9 @@ export default function AdminRewardsProductsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral">
-                {products.map((product) => (
+                {products.map((product) => {
+                  const categoryLabel = CATEGORIES.find(c => c.value === product.category)?.label || "분류없음";
+                  return (
                   <tr key={product.id} className="hover:bg-neutral/5">
                     <td className="px-4 py-3">
                       {product.image_url ? (
@@ -280,48 +295,54 @@ export default function AdminRewardsProductsPage() {
                       <p className="font-medium text-foreground">
                         {product.title}
                       </p>
-                      {product.description && (
-                        <p className="text-xs text-foreground-muted mt-0.5 line-clamp-1">
-                          {product.description}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium text-foreground whitespace-nowrap">
-                      {product.point_price.toLocaleString()}P
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => toggleAvailability(product)}
-                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
-                          product.is_available
-                            ? "bg-green-100 text-green-700 hover:bg-green-200"
-                            : "bg-red-100 text-red-600 hover:bg-red-200"
-                        }`}
-                      >
-                        {product.is_available ? "판매중" : "품절"}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 text-foreground-muted whitespace-nowrap">
-                      {new Date(product.created_at).toLocaleDateString("ko-KR")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => openEditModal(product)}
-                          className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
-                        >
-                          수정
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product)}
-                          className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-500/20 transition-colors"
-                        >
-                          삭제
-                        </button>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="inline-block rounded-md bg-neutral/10 px-2 py-0.5 text-[10px] font-medium text-foreground-muted">
+                          {categoryLabel}
+                        </span>
+                        {product.description && (
+                          <p className="text-xs text-foreground-muted line-clamp-1">
+                            {product.description}
+                          </p>
+                        )}
                       </div>
                     </td>
-                  </tr>
-                ))}
+                      <td className="px-4 py-3 text-right font-medium text-foreground whitespace-nowrap">
+                        {product.point_price.toLocaleString()}P
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => toggleAvailability(product)}
+                          className={`inline-block rounded-full px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                            product.is_available
+                              ? "bg-green-100 text-green-700 hover:bg-green-200"
+                              : "bg-red-100 text-red-600 hover:bg-red-200"
+                          }`}
+                        >
+                          {product.is_available ? "판매중" : "품절"}
+                        </button>
+                      </td>
+                      <td className="px-4 py-3 text-foreground-muted whitespace-nowrap">
+                        {new Date(product.created_at).toLocaleDateString("ko-KR")}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openEditModal(product)}
+                            className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={() => handleDelete(product)}
+                            className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-500/20 transition-colors"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -423,6 +444,24 @@ export default function AdminRewardsProductsPage() {
                   placeholder="상품명을 입력하세요"
                   className="form-input"
                 />
+              </div>
+
+              {/* 카테고리 */}
+              <div>
+                <label className="form-label">
+                  카테고리 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm(prev => ({ ...prev, category: e.target.value }))}
+                  className="form-input bg-white"
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* 설명 */}

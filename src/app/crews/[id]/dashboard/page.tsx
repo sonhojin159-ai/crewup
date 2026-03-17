@@ -33,19 +33,22 @@ export default function DashboardPage() {
     setIsLoading(true);
     const supabase = createClient();
     
-    // 1. 크루 정보 및 미션
-    const { data: cData, error: cErr } = await supabase
-      .from('crews')
-      .select('*, missions(*)')
-      .eq('id', id)
-      .single();
+    // Parallel fetch: crew info, members, escrow, verifications, chats
+    const [crewResult, membersResult, escrowResult, verificationsResult, chatsResult] = await Promise.all([
+      supabase.from('crews').select('*, missions(*)').eq('id', id).single(),
+      supabase.from('crew_members').select('*, profiles(nickname, avatar_url)').eq('crew_id', id),
+      supabase.from('escrow_holds').select('id, crew_id, member_user_id, amount, released_amount, status, created_at').eq('crew_id', id),
+      supabase.from('mission_verifications').select('*, profiles(nickname)').eq('crew_id', id),
+      supabase.from('crew_chats').select('*, profiles:applicant_id(nickname, avatar_url)').eq('crew_id', id).order('updated_at', { ascending: false }),
+    ]);
 
+    const { data: cData, error: cErr } = crewResult;
     if (cErr || !cData) {
       console.error(cErr);
       setIsLoading(false);
       return;
     }
-    
+
     setCrew({
       id: cData.id,
       title: cData.title,
@@ -66,41 +69,14 @@ export default function DashboardPage() {
       createdBy: cData.created_by,
     });
 
-    // 2. 멤버 목록 (Active & Pending)
-    const { data: mData } = await supabase
-      .from('crew_members')
-      .select('*, profiles(nickname, avatar_url)')
-      .eq('crew_id', id);
-      
-    if (mData) {
-      setMembers(mData.filter(m => m.status === 'active'));
-      setPendingMembers(mData.filter(m => m.status === 'pending'));
+    if (membersResult.data) {
+      setMembers(membersResult.data.filter(m => m.status === 'active'));
+      setPendingMembers(membersResult.data.filter(m => m.status === 'pending'));
     }
 
-    // 3. 에스크로 현황
-    const { data: eData } = await supabase
-      .from('escrow_holds')
-      .select('id, crew_id, member_user_id, amount, released_amount, status, created_at')
-      .eq('crew_id', id);
-      
-    if (eData) setEscrowHolds(eData);
-
-    // 4. 미션 인증 내역 (해당 크루)
-    const { data: vData } = await supabase
-      .from('mission_verifications')
-      .select('*, profiles(nickname)')
-      .eq('crew_id', id);
-      
-    if (vData) setVerifications(vData);
-
-    // 5. 사전 문의 내역
-    const { data: cListData } = await supabase
-      .from('crew_chats')
-      .select('*, profiles:applicant_id(nickname, avatar_url)')
-      .eq('crew_id', id)
-      .order('updated_at', { ascending: false });
-    
-    if (cListData) setChats(cListData);
+    if (escrowResult.data) setEscrowHolds(escrowResult.data);
+    if (verificationsResult.data) setVerifications(verificationsResult.data);
+    if (chatsResult.data) setChats(chatsResult.data);
 
     setIsLoading(false);
   }, [id]);
@@ -168,7 +144,7 @@ export default function DashboardPage() {
 
   // amount = entry_points(플랫폼 수익) + deposit(예치금). 예치액은 deposit 부분만 표시.
   const entryPoints = crew?.entryPoints || 0;
-  const totalEscrow = escrowHolds.reduce((sum) => sum + (crew?.deposit || 0), 0);
+  const totalEscrow = escrowHolds.reduce((sum, h) => sum + (h.amount || 0), 0);
   const releasedEscrow = escrowHolds.reduce((sum, h) => sum + Math.max(0, h.released_amount - entryPoints), 0);
   const remainEscrow = totalEscrow - releasedEscrow;
 

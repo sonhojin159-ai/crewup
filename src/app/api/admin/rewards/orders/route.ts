@@ -67,5 +67,23 @@ export async function GET(request: Request) {
     return order;
   });
 
-  return NextResponse.json(masked);
+  // profiles에 email 병합 (email은 auth.users에만 존재)
+  const userIds = [...new Set((masked || []).map((o) => o.user_id))];
+  const emailMap: Record<string, string> = {};
+  await Promise.all(
+    userIds.map(async (uid) => {
+      const { data: authUser } = await adminSupabase.auth.admin.getUserById(uid);
+      if (authUser?.user) emailMap[uid] = authUser.user.email || '';
+    })
+  );
+
+  const enriched = masked?.map((order) => ({
+    ...order,
+    profiles: {
+      ...(order.profiles as unknown as Record<string, unknown> | null),
+      email: emailMap[order.user_id] || null,
+    },
+  }));
+
+  return NextResponse.json(enriched);
 }

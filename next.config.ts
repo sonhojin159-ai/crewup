@@ -5,10 +5,14 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**', // Allowing all for now to ensure Supabase and other potential stores work
+        hostname: '**',
       },
     ],
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
   },
+  compress: true,
+  poweredByHeader: false,
 };
 
 export default nextConfig;

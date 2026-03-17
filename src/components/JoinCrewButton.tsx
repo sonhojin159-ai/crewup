@@ -25,28 +25,19 @@ export default function JoinCrewButton({ crewId }: { crewId: string }) {
                 return;
             }
 
-            // Check if user is the owner
-            const { data: crew } = await supabase
-                .from('crews')
-                .select('created_by')
-                .eq('id', crewId)
-                .single();
-            
-            if (crew?.created_by === user.id) {
+            // Parallel fetch: crew ownership + membership status
+            const [crewResult, memberResult] = await Promise.all([
+                supabase.from('crews').select('created_by').eq('id', crewId).single(),
+                supabase.from('crew_members').select('status').eq('crew_id', crewId).eq('user_id', user.id).single(),
+            ]);
+
+            if (crewResult.data?.created_by === user.id) {
                 setMembershipStatus('owner');
                 return;
             }
 
-            // Check membership
-            const { data: member } = await supabase
-                .from('crew_members')
-                .select('status')
-                .eq('crew_id', crewId)
-                .eq('user_id', user.id)
-                .single();
-
-            if (member) {
-                setMembershipStatus(member.status as any);
+            if (memberResult.data) {
+                setMembershipStatus(memberResult.data.status as any);
             } else {
                 setMembershipStatus('none');
             }

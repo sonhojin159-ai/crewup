@@ -14,7 +14,25 @@ interface RewardItem {
   image_url: string | null;
   point_price: number;
   is_available: boolean;
+  category: string;
 }
+
+const CATEGORIES = [
+  { value: "ALL", label: "전체" },
+  { value: "FASHION", label: "패션/의류" },
+  { value: "FOOD", label: "식품/음료" },
+  { value: "IT", label: "IT/전자기기" },
+  { value: "APPLIANCE", label: "가전제품" },
+  { value: "MISC", label: "잡화/기타" },
+] as const;
+
+const PRICE_RANGES = [
+  { value: "ALL", label: "전체 금액" },
+  { value: "UNDER_10K", label: "1만 P 이하" },
+  { value: "10K_50K", label: "1만 P ~ 5만 P" },
+  { value: "50K_100K", label: "5만 P ~ 10만 P" },
+  { value: "OVER_100K", label: "10만 P 이상" },
+] as const;
 
 type OrderStep = "idle" | "form" | "confirm";
 
@@ -22,6 +40,10 @@ export default function RewardsPage() {
   const [items, setItems] = useState<RewardItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState(0);
+
+  // 필터 상태
+  const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
+  const [priceFilter, setPriceFilter] = useState<string>("ALL");
 
   // 주문 모달 상태
   const [selectedItem, setSelectedItem] = useState<RewardItem | null>(null);
@@ -114,6 +136,20 @@ export default function RewardsPage() {
     }
   };
 
+  const filteredItems = items.filter((item) => {
+    // 1. 카테고리 필터
+    if (categoryFilter !== "ALL" && item.category !== categoryFilter) {
+      return false;
+    }
+    // 2. 가격 필터
+    if (priceFilter === "UNDER_10K" && item.point_price > 10000) return false;
+    if (priceFilter === "10K_50K" && (item.point_price <= 10000 || item.point_price > 50000)) return false;
+    if (priceFilter === "50K_100K" && (item.point_price <= 50000 || item.point_price > 100000)) return false;
+    if (priceFilter === "OVER_100K" && item.point_price <= 100000) return false;
+
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -159,18 +195,55 @@ export default function RewardsPage() {
           </div>
         </div>
 
+        {/* 필터 영역 */}
+        <div className="mt-8 space-y-4">
+          {/* 카테고리 탭 */}
+          <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide border-b border-neutral">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => setCategoryFilter(cat.value)}
+                className={`flex-shrink-0 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
+                  categoryFilter === cat.value
+                    ? "border-primary text-primary"
+                    : "border-transparent text-foreground-muted hover:text-foreground hover:border-neutral/50"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          {/* 가격대 필터 (Pills) */}
+          <div className="flex flex-wrap gap-2">
+            {PRICE_RANGES.map((range) => (
+              <button
+                key={range.value}
+                onClick={() => setPriceFilter(range.value)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  priceFilter === range.value
+                    ? "bg-primary text-white"
+                    : "bg-surface text-foreground-muted hover:bg-neutral/20 border border-neutral/50"
+                }`}
+              >
+                {range.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* 상품 그리드 */}
-        <div className="mt-8">
+        <div className="mt-6">
           {loading ? (
             <div className="p-12 text-center text-sm text-foreground-muted">불러오는 중...</div>
-          ) : items.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <div className="rounded-xl border border-neutral bg-surface p-12 text-center">
-              <p className="text-foreground-muted">현재 등록된 상품이 없습니다</p>
-              <p className="mt-1 text-xs text-foreground-muted">곧 다양한 리워드 상품이 추가될 예정입니다</p>
+              <p className="text-foreground-muted">해당하는 상품이 없습니다</p>
+              <p className="mt-1 text-xs text-foreground-muted">다른 필터를 선택하거나 모든 상품을 확인해보세요</p>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((item) => {
+              {filteredItems.map((item) => {
                 const canAfford = balance >= item.point_price;
                 return (
                   <div
@@ -194,6 +267,11 @@ export default function RewardsPage() {
 
                     {/* 정보 */}
                     <div className="p-4">
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <span className="inline-block rounded-md bg-neutral/10 px-2 py-0.5 text-[10px] font-medium text-foreground-muted">
+                          {CATEGORIES.find(c => c.value === item.category)?.label || "분류없음"}
+                        </span>
+                      </div>
                       <h3 className="font-bold text-foreground leading-tight">{item.title}</h3>
                       {item.description && (
                         <p className="mt-1 text-xs text-foreground-muted line-clamp-2">

@@ -40,6 +40,7 @@ export async function POST(request: Request) {
     original_url?: string;
     image_url?: string;
     is_available?: boolean;
+    category?: string;
   };
 
   try {
@@ -61,6 +62,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '포인트가는 양수 정수여야 합니다.' }, { status: 400 });
   }
 
+  const category = body.category?.trim() || 'MISC';
+
   const adminSupabase = createAdminClient();
 
   const { data, error } = await adminSupabase
@@ -72,6 +75,7 @@ export async function POST(request: Request) {
       original_url: body.original_url?.trim() || null,
       image_url: body.image_url?.trim() || null,
       is_available: body.is_available ?? true,
+      category: category,
     })
     .select()
     .single();

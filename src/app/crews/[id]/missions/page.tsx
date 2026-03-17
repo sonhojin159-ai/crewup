@@ -196,9 +196,6 @@ export default function MissionsPage() {
 
   const missions = crew.missions;
   const total = missions.length;
-  const done = missions.filter((m) => m.completed).length;
-  const rate = total > 0 ? Math.round((done / total) * 100) : 0;
-  const rewardAvailable = rate >= 80;
 
   const formatRelativeTime = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
