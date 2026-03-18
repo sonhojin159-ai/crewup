@@ -10,19 +10,12 @@ export async function GET() {
     return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
   }
 
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const keyPayload = serviceKey?.split('.')[1];
-  const keyRole = keyPayload ? JSON.parse(Buffer.from(keyPayload, 'base64url').toString()).role : 'unknown';
-  console.log('[DEBUG] service key role claim:', keyRole, 'length:', serviceKey?.length);
-
   const adminSupabase = createAdminClient();
 
   const { data, error } = await adminSupabase
     .from('rewards_store')
     .select('*')
     .order('created_at', { ascending: false });
-
-  console.log('[DEBUG] rewards_store query - data count:', data?.length, 'error:', JSON.stringify(error));
 
   if (error) {
     console.error('Admin rewards products fetch error:', error);
