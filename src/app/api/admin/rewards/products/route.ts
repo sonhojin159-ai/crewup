@@ -10,6 +10,9 @@ export async function GET() {
     return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
   }
 
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  console.log('[DEBUG] service key defined:', !!serviceKey, 'length:', serviceKey?.length, 'starts:', serviceKey?.substring(0, 10));
+
   const adminSupabase = createAdminClient();
 
   const { data, error } = await adminSupabase
