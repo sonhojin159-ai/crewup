@@ -50,10 +50,16 @@ export default function ChargePage() {
   };
 
   const currentAmount = selectedAmount || (customAmount ? parseInt(customAmount, 10) : 0);
+  const isOverLimit = currentAmount > 500000;
 
   const handlePayment = async () => {
     if (!currentAmount || currentAmount < 1000) {
       alert("최소 충전 금액은 1,000P 입니다.");
+      return;
+    }
+
+    if (isOverLimit) {
+      alert("1回 최대 충전 한도는 500,000P 입니다.");
       return;
     }
 
@@ -181,6 +187,9 @@ export default function ChargePage() {
             {customAmount && parseInt(customAmount, 10) < 1000 && (
               <p className="mt-2 text-xs text-primary">1,000P 이상부터 충전 가능합니다.</p>
             )}
+            {isOverLimit && (
+              <p className="mt-2 text-xs text-primary">1회 최대 500,000P까지 충전 가능합니다.</p>
+            )}
           </div>
 
           {/* 결제수단 선택 */}
@@ -222,7 +231,7 @@ export default function ChargePage() {
 
             <button
               onClick={handlePayment}
-              disabled={isProcessing || !currentAmount || currentAmount < 1000}
+              disabled={isProcessing || !currentAmount || currentAmount < 1000 || isOverLimit}
               className="btn-primary flex justify-center py-4 text-lg shadow-md disabled:bg-neutral disabled:opacity-50"
             >
               {isProcessing
