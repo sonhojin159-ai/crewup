@@ -19,19 +19,42 @@ export default function ChatRoom({ crewId, currentUserId }: ChatRoomProps) {
   useEffect(() => {
     const loadMessages = async () => {
       const supabase = createClient();
-      // crew_messages 테이블: 크루 내부 그룹 채팅용
-      const { data, error } = await supabase
+
+      const { data: rawMessages, error } = await supabase
         .from("crew_messages")
-        .select("*, profiles:user_id(nickname, avatar_url)")
+        .select("*")
         .eq("crew_id", crewId)
         .order("created_at", { ascending: true })
         .limit(50);
 
       if (error) {
-        console.error("Failed to load messages:", error);
-      } else {
-        setMessages(data as ChatMessage[]);
+        console.error("Failed to load messages:", error.code, error.message);
+        setIsLoading(false);
+        return;
       }
+
+      if (!rawMessages || rawMessages.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+
+      // 프로필 별도 조회
+      const userIds = [...new Set(rawMessages.map((m) => m.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, nickname, avatar_url")
+        .in("id", userIds);
+
+      const profileMap = Object.fromEntries(
+        (profiles || []).map((p) => [p.id, p])
+      );
+
+      const messages = rawMessages.map((m) => ({
+        ...m,
+        profiles: profileMap[m.user_id] || { nickname: "알 수 없음", avatar_url: null },
+      }));
+
+      setMessages(messages as ChatMessage[]);
       setIsLoading(false);
     };
 
@@ -52,7 +75,6 @@ export default function ChatRoom({ crewId, currentUserId }: ChatRoomProps) {
           filter: `crew_id=eq.${crewId}`,
         },
         async (payload) => {
-          // 새 메시지의 프로필 정보 조회
           const { data: profile } = await supabase
             .from("profiles")
             .select("nickname, avatar_url")
