@@ -11,7 +11,9 @@ export async function GET() {
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  console.log('[DEBUG] service key defined:', !!serviceKey, 'length:', serviceKey?.length, 'starts:', serviceKey?.substring(0, 10));
+  const keyPayload = serviceKey?.split('.')[1];
+  const keyRole = keyPayload ? JSON.parse(Buffer.from(keyPayload, 'base64url').toString()).role : 'unknown';
+  console.log('[DEBUG] service key role claim:', keyRole, 'length:', serviceKey?.length);
 
   const adminSupabase = createAdminClient();
 
