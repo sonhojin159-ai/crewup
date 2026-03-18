@@ -17,6 +17,8 @@ export async function GET() {
     .select('*')
     .order('created_at', { ascending: false });
 
+  console.log('[DEBUG] rewards_store query - data count:', data?.length, 'error:', JSON.stringify(error));
+
   if (error) {
     console.error('Admin rewards products fetch error:', error);
     return NextResponse.json({ error: '상품 목록 조회 중 오류가 발생했습니다.' }, { status: 500 });
