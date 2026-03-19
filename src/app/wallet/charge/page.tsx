@@ -7,20 +7,12 @@ import Footer from "@/components/Footer";
 import { Bootpay } from "@bootpay/client-js";
 import { createClient } from "@/lib/supabase/client";
 
-const CHARGE_AMOUNTS = [1000, 5000, 10000, 50000];
-
-type PaymentMethod = 'card' | 'kakaopay';
-
-const PAYMENT_METHODS: { value: PaymentMethod; label: string; desc: string; icon: string }[] = [
-  { value: 'card', label: '카드결제', desc: '토스페이먼츠', icon: '💳' },
-  { value: 'kakaopay', label: '카카오페이', desc: '간편결제', icon: '🟡' },
-];
+const CHARGE_AMOUNTS = [10000, 30000, 50000, 100000];
 
 export default function ChargePage() {
   const router = useRouter();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [user, setUser] = useState<any>(null);
 
@@ -50,7 +42,7 @@ export default function ChargePage() {
   };
 
   const currentAmount = selectedAmount || (customAmount ? parseInt(customAmount, 10) : 0);
-  const isOverLimit = currentAmount > 500000;
+  const isOverLimit = currentAmount > 100000;
 
   const handlePayment = async () => {
     if (!currentAmount || currentAmount < 1000) {
@@ -59,7 +51,7 @@ export default function ChargePage() {
     }
 
     if (isOverLimit) {
-      alert("1回 최대 충전 한도는 500,000P 입니다.");
+      alert("1회 최대 충전 한도는 100,000P 입니다.");
       return;
     }
 
@@ -79,15 +71,8 @@ export default function ChargePage() {
     try {
       const orderId = `charge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      // PG사 및 결제수단 설정
-      const pgConfig = paymentMethod === 'kakaopay'
-        ? { pg: 'kakaopay', method: '' }
-        : { pg: 'tosspayments', method: 'card' };
-
       const payload: any = {
         application_id: applicationId,
-        pg: pgConfig.pg,
-        method: pgConfig.method,
         price: currentAmount,
         order_name: `포인트 충전 ${currentAmount}P`,
         order_id: orderId,
@@ -110,7 +95,7 @@ export default function ChargePage() {
           escrow: false,
           display_success_result: true,
           display_error_result: true,
-        }
+        },
       };
 
       const response = await Bootpay.requestPayment(payload);
@@ -137,8 +122,8 @@ export default function ChargePage() {
       if (e.event === 'cancel') {
         alert("결제를 취소하셨습니다.");
       } else {
-        alert("결제 중 오류가 발생했습니다: " + (e.message || '알 수 없는 오류'));
-        console.error(e);
+        console.error('Bootpay error:', JSON.stringify(e), e);
+        alert("결제 중 오류가 발생했습니다: " + (e.message || e.error_code || e.event || JSON.stringify(e)));
       }
     } finally {
       setIsProcessing(false);
@@ -188,35 +173,8 @@ export default function ChargePage() {
               <p className="mt-2 text-xs text-primary">1,000P 이상부터 충전 가능합니다.</p>
             )}
             {isOverLimit && (
-              <p className="mt-2 text-xs text-primary">1회 최대 500,000P까지 충전 가능합니다.</p>
+              <p className="mt-2 text-xs text-primary">1회 최대 100,000P까지 충전 가능합니다.</p>
             )}
-          </div>
-
-          {/* 결제수단 선택 */}
-          <div className="mb-6">
-            <p className="mb-3 text-sm font-medium text-foreground-muted">결제수단 선택</p>
-            <div className="grid grid-cols-2 gap-3">
-              {PAYMENT_METHODS.map((pm) => (
-                <button
-                  key={pm.value}
-                  type="button"
-                  onClick={() => setPaymentMethod(pm.value)}
-                  className={`flex items-center gap-3 rounded-xl border p-4 transition-all ${
-                    paymentMethod === pm.value
-                      ? "border-primary bg-primary/10"
-                      : "border-neutral hover:border-primary/50"
-                  }`}
-                >
-                  <span className="text-2xl">{pm.icon}</span>
-                  <div className="text-left">
-                    <p className={`text-sm font-semibold ${paymentMethod === pm.value ? 'text-primary' : 'text-foreground'}`}>
-                      {pm.label}
-                    </p>
-                    <p className="text-xs text-foreground-muted">{pm.desc}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* 결제 */}
@@ -234,12 +192,7 @@ export default function ChargePage() {
               disabled={isProcessing || !currentAmount || currentAmount < 1000 || isOverLimit}
               className="btn-primary flex justify-center py-4 text-lg shadow-md disabled:bg-neutral disabled:opacity-50"
             >
-              {isProcessing
-                ? "결제창 호출 중..."
-                : paymentMethod === 'kakaopay'
-                  ? "카카오페이로 결제하기"
-                  : "카드로 결제하기"
-              }
+              {isProcessing ? "결제창 호출 중..." : "결제하기"}
             </button>
             <p className="mt-3 text-center text-xs text-foreground-muted">
               결제는 부트페이를 통해 안전하게 처리됩니다.
