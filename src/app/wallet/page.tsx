@@ -78,14 +78,10 @@ export default function WalletPage() {
                 {totalPoints.toLocaleString()}
                 <span className="ml-1 text-xl font-semibold opacity-80">P</span>
               </p>
-              <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="mt-6">
                 <div className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-xs opacity-70">에스크로 중 (인증 후 지급)</p>
+                  <p className="text-xs opacity-70">에스크로 중 (미션 완료 시 지급)</p>
                   <p className="mt-1 text-lg font-bold">{escrowBalance.toLocaleString()}P</p>
-                </div>
-                <div className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-xs opacity-70">누적 획득 리워드</p>
-                  <p className="mt-1 text-lg font-bold">{(wallet?.total_earned ?? 0).toLocaleString()}P</p>
                 </div>
               </div>
             </div>
@@ -137,25 +133,30 @@ export default function WalletPage() {
                     <p className="mt-1 text-xs text-foreground-muted">크루 활동으로 리워드를 모아보세요!</p>
                   </div>
                 ) : (
-                  filteredHistory.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between rounded-xl border border-neutral px-4 py-3">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {item.note || (
-                            item.type === 'charge' ? '포인트 충전' :
-                            item.type === 'entry_payment' ? '크루 참여금' :
-                            item.type === 'reward_order' ? '리워드 주문 차감' :
-                            item.type === 'reward' ? '미션 달성 리워드' :
-                            item.type
-                          )}
+                  filteredHistory.map((item) => {
+                    const DEBIT_TYPES = ['entry_payment', 'forfeiture', 'reward_order'];
+                    const displayAmount = DEBIT_TYPES.includes(item.type) ? -Math.abs(item.amount) : item.amount;
+                    const label = item.note || (
+                      item.type === 'charge' ? '포인트 충전' :
+                      item.type === 'entry_payment' ? '크루 참여금' :
+                      item.type === 'reward_order' ? '리워드 주문 차감' :
+                      item.type === 'reward' ? '미션 달성 리워드' :
+                      item.type === 'refund' ? '크루 해산 환급' :
+                      item.type === 'escrow_release' ? '에스크로 지급' :
+                      item.type
+                    );
+                    return (
+                      <div key={item.id} className="flex items-center justify-between rounded-xl border border-neutral px-4 py-3">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{label}</p>
+                          <p className="mt-0.5 text-xs text-foreground-muted">{format(new Date(item.created_at), 'yyyy.MM.dd')}</p>
+                        </div>
+                        <p className={`font-semibold ${displayAmount > 0 ? "text-success-text" : "text-primary"}`}>
+                          {displayAmount > 0 ? "+" : ""}{displayAmount.toLocaleString()}P
                         </p>
-                        <p className="mt-0.5 text-xs text-foreground-muted">{format(new Date(item.created_at), 'yyyy.MM.dd')}</p>
                       </div>
-                      <p className={`font-semibold ${item.amount > 0 ? "text-success-text" : "text-primary"}`}>
-                        {item.amount > 0 ? "+" : ""}{item.amount.toLocaleString()}P
-                      </p>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
