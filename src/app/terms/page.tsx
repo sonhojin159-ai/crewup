@@ -19,7 +19,7 @@ export default function TermsPage() {
         </nav>
 
         <h1 className="text-3xl font-bold text-foreground">이용약관</h1>
-        <p className="mt-2 text-sm text-foreground-muted">최종 업데이트: 2026년 3월 13일 · v1.0</p>
+        <p className="mt-2 text-sm text-foreground-muted">최종 업데이트: 2026년 3월 19일 · v1.1</p>
 
         <div className="mt-8 space-y-8 text-sm leading-relaxed text-foreground">
 
@@ -56,6 +56,22 @@ export default function TermsPage() {
               <li>자발적 탈퇴 시 참여금은 환급되지 않을 수 있습니다.</li>
               <li>크루장의 사정으로 크루가 해산될 경우, 크루장이 선납한 보호 예치금이 우선 사용되어 멤버에게 보상됩니다.</li>
             </ul>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-bold text-foreground mb-3">제5-2조 (포인트 이용기간)</h2>
+            <p className="text-foreground-muted">
+              충전된 포인트의 이용기간은 <strong className="text-foreground">결제일로부터 1년</strong>입니다.
+              이용기간이 경과한 미사용 포인트는 자동 소멸되며, 소멸된 포인트에 대해서는 환불 및 복원이 불가합니다.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-bold text-foreground mb-3">제5-3조 (포인트 양도 금지)</h2>
+            <p className="text-foreground-muted">
+              충전된 포인트는 <strong className="text-foreground">타인에게 양도하거나 매매할 수 없습니다</strong>.
+              포인트는 충전한 본인의 계정에서만 사용할 수 있으며, 양도 또는 매매 시도가 확인될 경우 서비스 이용이 제한될 수 있습니다.
+            </p>
           </section>
 
           <section>

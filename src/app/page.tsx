@@ -169,6 +169,50 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── Service Flow ─────────────────────────────────── */}
+      <section className="px-4 py-14">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="mb-3 text-center text-2xl font-bold text-foreground">
+            크루업 이용 흐름
+          </h2>
+          <p className="mx-auto mb-10 max-w-md text-center text-sm text-foreground-muted">
+            간단한 4단계로 부업 크루 활동을 시작하세요
+          </p>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                step: "1",
+                title: "크루 참여 신청",
+                desc: "관심 있는 크루를 찾아 참여비 포인트를 납부하고 신청합니다.",
+              },
+              {
+                step: "2",
+                title: "미션 수행",
+                desc: "크루의 단계별 미션을 수행하며 부업 활동을 진행합니다.",
+              },
+              {
+                step: "3",
+                title: "리워드 포인트 적립",
+                desc: "미션 완료 시 리워드 포인트가 적립됩니다.",
+              },
+              {
+                step: "4",
+                title: "리워드 상품 교환",
+                desc: "적립된 포인트로 다양한 상품을 선택하고 배송받으세요. (최대 6주 소요)",
+              },
+            ].map((item) => (
+              <div key={item.step} className="card text-center">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
+                  {item.step}
+                </span>
+                <h3 className="mt-4 text-base font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-foreground-muted">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Bottom CTA ──────────────────────────────────── */}
       <section className="relative overflow-hidden px-4 py-16 text-center">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-secondary/8 to-transparent" />

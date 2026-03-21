@@ -163,6 +163,41 @@ export default function WalletPage() {
         )}
       </div>
 
+      {/* 포인트 이용 안내 */}
+      <div className="mx-auto max-w-3xl px-4 pb-8">
+        <div className="rounded-2xl border border-neutral bg-surface p-6">
+          <h2 className="text-lg font-bold text-foreground mb-4">포인트 이용 안내</h2>
+
+          <div className="flex items-start gap-3 overflow-x-auto pb-2">
+            {[
+              { step: "1", label: "포인트 충전" },
+              { step: "2", label: "크루 참여비 납부" },
+              { step: "3", label: "미션 수행" },
+              { step: "4", label: "리워드 포인트 적립" },
+              { step: "5", label: "리워드 상품 교환" },
+            ].map((item, idx) => (
+              <div key={item.step} className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-col items-center text-center">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                    {item.step}
+                  </span>
+                  <span className="mt-1.5 text-xs font-medium text-foreground whitespace-nowrap">{item.label}</span>
+                </div>
+                {idx < 4 && (
+                  <span className="text-foreground-muted text-lg mt-[-1rem]">&rarr;</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <ul className="mt-4 space-y-1 text-xs text-foreground-muted">
+            <li>- 포인트 이용기간: 결제일로부터 1년</li>
+            <li>- 포인트는 타인에게 양도 또는 매매할 수 없습니다</li>
+            <li>- 리워드 상품은 주문 후 최대 6주 이내 배송됩니다</li>
+          </ul>
+        </div>
+      </div>
+
       <Footer />
     </div>
   );
