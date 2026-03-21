@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const PRETENDARD_CSS =
+  "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css";
+
 export const metadata: Metadata = {
   title: "크루업 - 함께하는 부업 플랫폼",
   description:
@@ -18,8 +21,22 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link
+          rel="preload"
+          as="style"
+          href={PRETENDARD_CSS}
+        />
+        <link
           rel="stylesheet"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+          href={PRETENDARD_CSS}
+          media="print"
+        />
+        <noscript>
+          <link rel="stylesheet" href={PRETENDARD_CSS} />
+        </noscript>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.querySelector('link[media="print"][rel="stylesheet"]').addEventListener('load',function(){this.media='all'})`,
+          }}
         />
       </head>
       <body className="antialiased">
