@@ -142,10 +142,8 @@ export default function DashboardPage() {
   if (isLoading) return <div className="py-20 text-center">로딩 중...</div>;
   if (!crew) return <div className="py-20 text-center">크루를 찾을 수 없습니다</div>;
 
-  // amount = entry_points(플랫폼 수익) + deposit(예치금). 예치액은 deposit 부분만 표시.
-  const entryPoints = crew?.entryPoints || 0;
   const totalEscrow = escrowHolds.reduce((sum, h) => sum + (h.amount || 0), 0);
-  const releasedEscrow = escrowHolds.reduce((sum, h) => sum + Math.max(0, h.released_amount - entryPoints), 0);
+  const releasedEscrow = escrowHolds.reduce((sum, h) => sum + (h.released_amount || 0), 0);
   const remainEscrow = totalEscrow - releasedEscrow;
 
   const missions = crew.missions || [];
